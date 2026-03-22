@@ -1,0 +1,347 @@
+# promptfooconfig.yaml
+# AI Agent Testing Configuration for Systemic Calendar App
+
+models:
+  - name: gpt-4
+    provider: openai
+    model: gpt-4
+    temperature: 0.7
+
+prompts:
+  planner:
+    id: planner-agent
+    raw: |
+      You are {{name}}, a strategic product planner.
+      
+      System Context:
+      - User is managing a calendar with 3 systems: Health, Work, Relationships
+      - Each system represents a life domain the user wants to balance
+      
+      User Request: {{query}}
+      
+      Generate a product roadmap response with:
+      1. Clear problem statement
+      2. Success metrics
+      3. Implementation timeline
+      
+      Return valid JSON with this structure:
+      {
+        "problemStatement": "string",
+        "successMetrics": ["string"],
+        "timeline": "string",
+        "confidence": number (0-1)
+      }
+      
+      Rules:
+      - Only reference the 3 systems: Health, Work, Relationships
+      - No hallucinated data
+      - Confidence should reflect evidence level
+
+  scheduler:
+    id: scheduler-agent
+    raw: |
+      You are Casey, an operations specialist for calendar scheduling.
+      
+      Current Events: {{events}}
+      System: {{system}}
+      
+      Check for scheduling conflicts and suggest optimal times.
+      
+      Return valid JSON:
+      {
+        "hasConflict": boolean,
+        "conflicts": [{"eventId": "string", "overlapMinutes": number}],
+        "suggestions": ["string"],
+        "optimalTime": "HH:MM",
+        "confidence": number
+      }
+      
+      Rules:
+      - Only use event IDs from the provided events list
+      - No invented event IDs
+      - Validate time ranges
+
+  reflection:
+    id: reflection-agent
+    raw: |
+      You are Riley, an analytical reflection specialist.
+      
+      Weekly Data:
+      - Total Events: {{totalEvents}}
+      - Completed: {{completed}}
+      - Missed: {{missed}}
+      - System Distribution: {{distribution}}
+      
+      Generate a weekly reflection with insights.
+      
+      Return valid JSON:
+      {
+        "completionRate": number,
+        "systemBalance": {
+          "health": number,
+          "work": number,
+          "relationships": number
+        },
+        "insights": ["string"],
+        "recommendations": ["string"],
+        "grade": "A" | "B" | "C" | "D" | "F"
+      }
+      
+      Rules:
+      - Completion rate must match (completed/total * 100)
+      - No hallucinated numbers
+      - Systems must be Health, Work, or Relationships only
+
+  behavior-coach:
+    id: behavior-coach-agent
+    raw: |
+      You are Jordan, a behavior change specialist for habit formation.
+      
+      User Context:
+      - User ID: {{userId}}
+      - Focus System: {{system}}
+      - Current Streak: {{streak}} days
+      - Motivation Level: {{motivation}}/10
+      - Recent Wins: {{recentWins}}
+      - Barriers: {{barriers}}
+      
+      Action: {{action}}
+      
+      Return valid JSON:
+      {
+        "deliverable": "string",
+        "message": "string",
+        "encouragement": "string",
+        "recommendations": [{"action": "string", "cue": "string", "rationale": "string"}],
+        "milestones": [{"days": number, "reward": "string"}],
+        "motivationBoost": "string",
+        "followUp": "string"
+      }
+      
+      Rules:
+      - Be encouraging and supportive
+      - Reference the user's specific data
+      - No invented event IDs
+      - Focus on the specified system only
+
+testcases:
+  - description: "Planner Agent - Valid feature request"
+    vars:
+      name: "Morgan"
+      query: "I want to add recurring events to my calendar"
+    assert:
+      - type: contains
+        value: "problemStatement"
+      - type: is-json
+      - type: not-contains
+        value: "friends"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "family"
+        shouldBeFalse: true
+      - type: contains-all
+        value:
+          - Health
+          - Work
+          - Relationships
+
+  - description: "Planner Agent - No hallucinated systems"
+    vars:
+      name: "Morgan"
+      query: "Add a new finance tracking feature"
+    assert:
+      - type: is-json
+      - type: not-contains
+        value: "Finance"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "Social"
+        shouldBeFalse: true
+      - type: contains-all
+        value:
+          - Health
+          - Work
+          - Relationships
+
+  - description: "Scheduler Agent - Detect conflict"
+    vars:
+      events: '[{"id": "evt1", "title": "Morning Workout", "start": "07:00", "end": "08:00", "system": "Health"}, {"id": "evt2", "title": "Team Standup", "start": "07:30", "end": "08:00", "system": "Work"}]'
+      system: "Work"
+    assert:
+      - type: is-json
+      - type: equals
+        value: true
+        path: $.hasConflict
+      - type: contains
+        value: "evt1"
+        path: $.conflicts
+      - type: not-contains
+        value: "evt99"
+        shouldBeFalse: true
+
+  - description: "Scheduler Agent - No overlapping IDs"
+    vars:
+      events: '[{"id": "abc123", "title": "Meeting"}, {"id": "xyz789", "title": "Call"}]'
+      system: "Work"
+    assert:
+      - type: is-json
+      - type: not-contains
+        value: "evt999"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "fake_id"
+        shouldBeFalse: true
+
+  - description: "Reflection Agent - Correct calculation"
+    vars:
+      totalEvents: "20"
+      completed: "16"
+      missed: "4"
+      distribution: "Health: 6, Work: 10, Relationships: 4"
+    assert:
+      - type: is-json
+      - type: equals
+        value: 80
+        path: $.completionRate
+      - type: equals
+        value: "B"
+        path: $.grade
+
+  - description: "Reflection Agent - Valid systems only"
+    vars:
+      totalEvents: "15"
+      completed: "12"
+      missed: "3"
+      distribution: "Health: 5, Work: 7, Relationships: 3"
+    assert:
+      - type: is-json
+      - type: contains-all
+        value:
+          - Health
+          - Work
+          - Relationships
+      - type: not-contains
+        value: "Finance"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "Social"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "Entertainment"
+        shouldBeFalse: true
+
+  - description: "Reflection Agent - Health system included"
+    vars:
+      totalEvents: "10"
+      completed: "8"
+      missed: "2"
+      distribution: "Health: 3, Work: 5, Relationships: 2"
+    assert:
+      - type: is-json
+      - type: contains
+        value: "Health"
+        path: $.systemBalance
+      - type: greater-than
+        value: 0
+        path: $.systemBalance.health
+
+  - description: "Reflection Agent - No hallucinated metrics"
+    vars:
+      totalEvents: "10"
+      completed: "8"
+      missed: "2"
+      distribution: "Health: 3, Work: 5, Relationships: 2"
+    assert:
+      - type: is-json
+      - type: not-contains
+        value: "100"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "total"
+        shouldBeFalse: true
+      - type: equals
+        value: 80
+        path: $.completionRate
+
+  - description: "Behavior Coach - Habit coaching session"
+    vars:
+      userId: "user123"
+      system: "Health"
+      streak: "7"
+      motivation: "7"
+      recentWins: "Completed 3 workouts this week"
+      barriers: "Time constraint in mornings"
+      action: "habit_coaching"
+    assert:
+      - type: is-json
+      - type: contains
+        value: "encouragement"
+      - type: contains
+        value: "recommendations"
+      - type: not-contains
+        value: "evt999"
+        shouldBeFalse: true
+
+  - description: "Behavior Coach - Motivation assessment"
+    vars:
+      userId: "user456"
+      system: "Work"
+      streak: "14"
+      motivation: "5"
+      recentWins: "Finished 2 major projects"
+      barriers: "Burnout from overwork"
+      action: "motivation_assessment"
+    assert:
+      - type: is-json
+      - type: contains
+        value: "message"
+      - type: contains
+        value: "motivationBoost"
+      - type: not-contains
+        value: "Finance"
+        shouldBeFalse: true
+
+  - description: "Behavior Coach - Celebrate win"
+    vars:
+      userId: "user789"
+      system: "Relationships"
+      streak: "21"
+      motivation: "9"
+      recentWins: "30 day streak - first milestone achieved!"
+      barriers: ""
+      action: "celebrate_win"
+    assert:
+      - type: is-json
+      - type: contains
+        value: "encouragement"
+      - type: contains
+        value: "milestones"
+      - type: not-contains
+        value: "Social"
+        shouldBeFalse: true
+
+  - description: "Behavior Coach - Valid system reference"
+    vars:
+      userId: "user999"
+      system: "Health"
+      streak: "3"
+      motivation: "6"
+      recentWins: "Started new routine"
+      barriers: "Getting up early"
+      action: "habit_plan"
+    assert:
+      - type: is-json
+      - type: not-contains
+        value: "Finance"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "Entertainment"
+        shouldBeFalse: true
+      - type: not-contains
+        value: "Social"
+        shouldBeFalse: true
+
+output:
+  provider: localai
+  showConfidenceScores: true
+  retryOnFailure: true

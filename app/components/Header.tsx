@@ -9,28 +9,28 @@ export default function Header() {
   const { user } = useUser();
 
   return (
-    <header className="border-b bg-white dark:bg-gray-800 dark:border-gray-700">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="border-b border-border bg-background dark:bg-[#2B262C] dark:border-gray-700">
+      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-white">
-            Calendar
+          <Link href="/" className="text-xl font-bold text-foreground dark:text-[#F5F1E8] tracking-tight">
+            VanCal
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-1">
             <Link
               href="/dashboard"
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground dark:text-gray-300 dark:hover:text-[#F5F1E8] transition-colors rounded-md hover:bg-muted/50 dark:hover:bg-gray-800"
             >
               Dashboard
             </Link>
             <Link
               href="/calendar"
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground dark:text-gray-300 dark:hover:text-[#F5F1E8] transition-colors rounded-md hover:bg-muted/50 dark:hover:bg-gray-800"
             >
               Calendar
             </Link>
             <Link
               href="/events"
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground dark:text-gray-300 dark:hover:text-[#F5F1E8] transition-colors rounded-md hover:bg-muted/50 dark:hover:bg-gray-800"
             >
               Events
             </Link>
@@ -42,18 +42,19 @@ export default function Header() {
             <>
               <Link
                 href="/profile"
-                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground dark:text-gray-300 dark:hover:text-[#F5F1E8] transition-colors px-3 py-2 rounded-md hover:bg-muted/50"
               >
                 Profile
               </Link>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="h-6 w-px bg-border dark:bg-gray-700" />
+              <span className="text-sm text-muted-foreground dark:text-gray-300">
                 {user?.firstName || user?.emailAddresses[0]?.emailAddress}
               </span>
               <UserButton />
             </>
           ) : (
             <SignInButton mode="modal">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
                 Sign In
               </button>
             </SignInButton>

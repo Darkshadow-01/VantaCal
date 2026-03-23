@@ -84,7 +84,7 @@ export function Topbar({
   };
 
   return (
-    <header className="h-16 px-6 flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+    <header className="h-16 px-6 flex items-center justify-between bg-background dark:bg-[#2B262C] border-b border-border dark:border-gray-800">
       {/* Left: Date Navigation */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => onDateChange(new Date())}>
@@ -100,13 +100,13 @@ export function Topbar({
           </Button>
         </div>
 
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h1 className="text-lg font-semibold text-foreground dark:text-[#F5F1E8]">
           {getDateRangeLabel()}
         </h1>
       </div>
 
       {/* Center: View Switcher */}
-      <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+      <div className="flex items-center gap-1 p-1 bg-muted dark:bg-gray-800 rounded-lg">
         {views.map((view) => (
           <button
             key={view.id}
@@ -114,8 +114,8 @@ export function Topbar({
             className={cn(
               "px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-150",
               currentView === view.id
-                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                ? "bg-background dark:bg-gray-700 text-foreground dark:text-[#F5F1E8] shadow-sm"
+                : "text-muted-foreground dark:text-gray-400 hover:text-foreground dark:hover:text-[#F5F1E8]"
             )}
           >
             {view.label}

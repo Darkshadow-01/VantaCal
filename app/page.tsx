@@ -32,7 +32,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<"daily" | "weekly" | "monthly" | "yearly">("weekly");
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-background to-muted">
+    <div className="flex h-screen bg-background dark:bg-[#1a1517]">
       {/* Sidebar */}
       <Sidebar 
         collapsed={sidebarCollapsed} 
@@ -52,12 +52,12 @@ export default function Home() {
         {/* Content Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Calendar */}
-          <main className="flex-1 overflow-auto bg-card">
+          <main className="flex-1 overflow-auto bg-background dark:bg-[#1a1517]">
             <VanCal />
           </main>
 
           {/* Right Sidebar - AI Insights */}
-          <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 space-y-6">
+          <aside className="w-80 bg-card dark:bg-[#3a3436] border-l border-border overflow-y-auto p-6 space-y-6">
             {/* AI Summary */}
             <Card>
               <CardHeader>

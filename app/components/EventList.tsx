@@ -33,6 +33,7 @@ export function EventList() {
   const { events, isDecrypting, error, createEvent, deleteEvent, refresh } = useEncryptedEvents(userId);
 
   const [showForm, setShowForm] = useState(false);
+  const [filterSystem, setFilterSystem] = useState<"All" | "Health" | "Work" | "Relationships">("All");
   const [formData, setFormData] = useState<NewEventForm>(() => {
     const now = Date.now();
     return {
@@ -43,6 +44,10 @@ export function EventList() {
       allDay: false,
     };
   });
+
+  const filteredEvents = filterSystem === "All" 
+    ? events 
+    : events?.filter((event) => event.system === filterSystem) || [];
 
   useEffect(() => {
     if (events.length >= 0) {
@@ -136,40 +141,59 @@ export function EventList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Your Events
-        </h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground dark:text-[#F5F1E8]">
+            All Events
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">{filteredEvents?.length || 0} events</p>
+        </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
         >
           <Plus className="w-4 h-4" />
           New Event
         </button>
       </div>
 
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {(["All", "Health", "Work", "Relationships"] as const).map((system) => (
+          <button
+            key={system}
+            onClick={() => setFilterSystem(system)}
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+              filterSystem === system
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80 dark:bg-gray-800 dark:hover:bg-gray-700"
+            }`}
+          >
+            {system}
+          </button>
+        ))}
+      </div>
+
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border dark:border-gray-700 space-y-4"
+          className="bg-card dark:bg-[#3a3436] rounded-lg shadow-sm p-6 border border-border dark:border-gray-700 space-y-4"
         >
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Title
+            <label className="block text-sm font-medium text-foreground dark:text-[#F5F1E8] mb-2">
+              Event Title
             </label>
             <input
               type="text"
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              placeholder="Event title"
+              className="w-full px-3 py-2 border border-border bg-background dark:bg-[#2B262C] dark:border-gray-600 dark:text-[#F5F1E8] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Enter event title"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-foreground dark:text-[#F5F1E8] mb-2">
               System
             </label>
             <select
@@ -180,7 +204,7 @@ export function EventList() {
                   system: e.target.value as "Health" | "Work" | "Relationships",
                 })
               }
-              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full px-3 py-2 border border-border bg-background dark:bg-[#2B262C] dark:border-gray-600 dark:text-[#F5F1E8] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="Health">Health</option>
               <option value="Work">Work</option>
@@ -188,9 +212,9 @@ export function EventList() {
             </select>
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground dark:text-[#F5F1E8] mb-2">
                 Start Time
               </label>
               <input
@@ -202,11 +226,11 @@ export function EventList() {
                     startTime: new Date(e.target.value).getTime(),
                   })
                 }
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full px-3 py-2 border border-border bg-background dark:bg-[#2B262C] dark:border-gray-600 dark:text-[#F5F1E8] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <div>
+              <label className="block text-sm font-medium text-foreground dark:text-[#F5F1E8] mb-2">
                 End Time
               </label>
               <input
@@ -218,7 +242,7 @@ export function EventList() {
                     endTime: new Date(e.target.value).getTime(),
                   })
                 }
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full px-3 py-2 border border-border bg-background dark:bg-[#2B262C] dark:border-gray-600 dark:text-[#F5F1E8] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -229,24 +253,24 @@ export function EventList() {
               id="allDay"
               checked={formData.allDay}
               onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+              className="w-4 h-4 text-primary border-border rounded"
             />
-            <label htmlFor="allDay" className="text-sm text-gray-700 dark:text-gray-300">
+            <label htmlFor="allDay" className="text-sm text-foreground dark:text-[#F5F1E8]">
               All day event
             </label>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3 pt-2">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
             >
               Create Event
             </button>
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors font-medium"
             >
               Cancel
             </button>
@@ -255,37 +279,42 @@ export function EventList() {
       )}
 
       <div className="space-y-3">
-        {events && events.length > 0 ? (
-          events.map((event) => (
+        {filteredEvents && filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
             <div
               key={event._id}
-              className={`p-4 rounded-lg border ${SYSTEM_BG_COLORS[event.system]}`}
+              className={`p-4 rounded-lg border transition-all ${SYSTEM_BG_COLORS[event.system]} hover:shadow-md`}
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <span
                       className={`w-3 h-3 rounded-full ${SYSTEM_COLORS[event.system]}`}
                     />
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                    <h3 className="font-semibold text-foreground dark:text-[#F5F1E8]">
                       {event.title}
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground dark:text-gray-400 mb-3">
                     {event.allDay
-                      ? format(event.startTime, "MMM d, yyyy")
+                      ? format(event.startTime, "MMMM d, yyyy")
                       : `${format(event.startTime, "MMM d, yyyy h:mm a")} - ${format(
                           event.endTime,
                           "h:mm a"
                         )}`}
                   </p>
-                  <span className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-white dark:bg-gray-700 rounded">
+                  <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
+                    event.system === "Health" ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300" :
+                    event.system === "Work" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" :
+                    "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
+                  }`}>
                     {event.system}
                   </span>
                 </div>
                 <button
                   onClick={() => handleDelete(event._id)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                  className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  aria-label="Delete event"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -293,7 +322,13 @@ export function EventList() {
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-500 py-8">No events yet. Create one!</p>
+          <div className="text-center py-12 bg-card dark:bg-[#3a3436] rounded-lg border border-border dark:border-gray-700">
+            <p className="text-muted-foreground">
+              {filterSystem === "All" 
+                ? "No events yet. Create one to get started!" 
+                : `No ${filterSystem} events. Create one!`}
+            </p>
+          </div>
         )}
       </div>
     </div>

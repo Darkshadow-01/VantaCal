@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Turbopack configuration (Next.js 16 default)
+  turbopack: {},
+
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -17,12 +20,6 @@ const nextConfig = {
   // Enable React Compiler for automatic performance optimizations
   reactCompiler: true,
 
-  // Bundle analysis and optimization
-  webpack: (config, { isServer }) => {
-    config.optimization.usedExports = true;
-    return config;
-  },
-
   // Headers for caching and performance
   async headers() {
     return [
@@ -36,7 +33,7 @@ const nextConfig = {
         ],
       },
       {
-        source: '/_next/static/:path*',
+        source: '/static/:path*',
         headers: [
           {
             key: 'Cache-Control',

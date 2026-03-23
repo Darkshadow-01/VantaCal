@@ -4,40 +4,45 @@ import { ClerkProvider } from "@clerk/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { useAuth } from "@clerk/react";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useMemo } from "react";
 
-// Initialize Convex client if URL is available
+// Safely initialize Convex client only if URL is available
+let convex: ConvexReactClient | null = null;
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
+
+try {
+  if (convexUrl) {
+    convex = new ConvexReactClient(convexUrl);
+  }
+} catch (error) {
+  console.error("[v0] Failed to initialize Convex client:", error);
+  convex = null;
+}
 
 function ConvexClientProviderInner({
   children,
 }: {
   children: ReactNode;
 }) {
-  // If Convex URL is not available, show a helpful message
-  if (!convex || !convexUrl) {
+  // If we have a valid Convex client, use it
+  if (convex && convexUrl) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background dark:bg-[#2B262C]">
-        <div className="text-center p-8 max-w-md">
-          <h1 className="text-2xl font-bold text-foreground dark:text-[#F5F1E8] mb-4">
-            Setup Required
-          </h1>
-          <p className="text-muted-foreground dark:text-gray-400 mb-4">
-            Environment variables are not configured. Please add NEXT_PUBLIC_CONVEX_URL and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY to your environment.
-          </p>
-          <p className="text-xs text-muted-foreground dark:text-gray-500">
-            For local development, run <code className="bg-muted dark:bg-gray-800 px-2 py-1 rounded">convex dev</code> and ensure your .env.local file is populated.
-          </p>
-        </div>
-      </div>
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        {children}
+      </ConvexProviderWithClerk>
     );
   }
 
+  // Fallback: Show demo mode message and render children anyway
   return (
-    <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-      {children}
-    </ConvexProviderWithClerk>
+    <>
+      <div className="fixed top-0 left-0 right-0 bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 px-4 py-3 z-50">
+        <p className="text-sm text-amber-800 dark:text-amber-200">
+          <span className="font-semibold">Demo Mode:</span> Database not connected. Add NEXT_PUBLIC_CONVEX_URL to enable data persistence.
+        </p>
+      </div>
+      <div className="pt-12">{children}</div>
+    </>
   );
 }
 
@@ -48,18 +53,17 @@ export default function ConvexClientProvider({
 }) {
   const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
+  // If no Clerk key, still render children in demo mode
   if (!clerkKey) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background dark:bg-[#2B262C]">
-        <div className="text-center p-8 max-w-md">
-          <h1 className="text-2xl font-bold text-foreground dark:text-[#F5F1E8] mb-4">
-            Configuration Required
-          </h1>
-          <p className="text-muted-foreground dark:text-gray-400">
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable is missing.
+      <>
+        <div className="fixed top-0 left-0 right-0 bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 px-4 py-3 z-50">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <span className="font-semibold">Demo Mode:</span> Authentication not configured. Add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY for login.
           </p>
         </div>
-      </div>
+        <div className="pt-12">{children}</div>
+      </>
     );
   }
 

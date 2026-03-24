@@ -4,20 +4,11 @@ import { ClerkProvider } from "@clerk/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { useAuth } from "@clerk/react";
-import React, { ReactNode, useMemo } from "react";
+import React, { ReactNode } from "react";
 
-// Safely initialize Convex client only if URL is available
-let convex: ConvexReactClient | null = null;
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-
-try {
-  if (convexUrl) {
-    convex = new ConvexReactClient(convexUrl);
-  }
-} catch (error) {
-  console.error("[v0] Failed to initialize Convex client:", error);
-  convex = null;
-}
+// Guard: only create the client when the URL is actually set
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL ?? "";
+const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 function ConvexClientProviderInner({
   children,

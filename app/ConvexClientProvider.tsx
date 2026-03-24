@@ -68,7 +68,13 @@ export default function ConvexClientProvider({
   }
 
   return (
-    <ClerkProvider publishableKey={clerkKey}>
+    <ClerkProvider
+      publishableKey={clerkKey}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
+    >
       <ConvexClientProviderInner>{children}</ConvexClientProviderInner>
     </ClerkProvider>
   );

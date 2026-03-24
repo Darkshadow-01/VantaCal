@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth, UserButton, SignInButton } from "@clerk/react";
+import { useAuth, UserButton } from "@clerk/react";
 import { useUser } from "@clerk/react";
 
 export default function Header() {
@@ -50,14 +50,23 @@ export default function Header() {
               <span className="text-sm text-muted-foreground dark:text-gray-300">
                 {user?.firstName || user?.emailAddresses[0]?.emailAddress}
               </span>
-              <UserButton />
+              <UserButton afterSignOutUrl="/" />
             </>
           ) : (
-            <SignInButton mode="modal">
-              <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
+            <div className="flex items-center gap-2">
+              <Link
+                href="/sign-in"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground dark:text-gray-300 dark:hover:text-[#F5F1E8] transition-colors rounded-lg hover:bg-muted/50"
+              >
                 Sign In
-              </button>
-            </SignInButton>
+              </Link>
+              <Link
+                href="/sign-up"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+              >
+                Get Started
+              </Link>
+            </div>
           )}
         </div>
       </div>

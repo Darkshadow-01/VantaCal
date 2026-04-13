@@ -157,7 +157,7 @@ async function fetchWeeklyEvents(
   completed?: boolean;
 }>> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const events = await convexQuery("events/index.getEvents", { userId }) as any[];
     return (events || []).filter((e: { startTime: number }) => {
       const eventTime = e.startTime / 1000;

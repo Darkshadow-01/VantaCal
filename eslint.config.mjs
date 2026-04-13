@@ -15,6 +15,29 @@ const eslintConfig = defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "prefer-const": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          "patterns": [
+            {
+              "group": ["../../features/*"],
+              "message": "Use feature public API (@features/[feature]/index) instead of direct imports"
+            },
+            {
+              "group": ["../../lib/*"],
+              "message": "Migrated to src/features or src/shared. Update import path"
+            },
+            {
+              "group": ["../../hooks/*"],
+              "message": "Migrated to src/shared/hooks"
+            },
+            {
+              "group": ["../../agents/*"],
+              "message": "Migrated to src/features/ai"
+            }
+          ]
+        }
+      ]
     },
   },
 ]);

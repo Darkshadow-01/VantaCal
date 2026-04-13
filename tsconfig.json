@@ -19,7 +19,16 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@features/*": ["./src/features/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@core/*": ["./src/core/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/shared/*": ["./src/shared/*"],
+      "@/domain/*": ["./src/domain/*"],
+      "@/application/*": ["./src/application/*"],
+      "@/infrastructure/*": ["./src/infrastructure/*"],
+      "@/cross-cutting/*": ["./src/cross-cutting/*"]
     }
   },
   "include": [

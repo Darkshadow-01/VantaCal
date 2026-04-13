@@ -16,6 +16,7 @@ interface EncryptionPasswordPromptProps {
   hasExistingKeys?: boolean;
   mode?: "unlock" | "setup";
   onClose?: () => void;
+  onReset?: () => void;
 }
 
 export function EncryptionPasswordPrompt({
@@ -28,6 +29,7 @@ export function EncryptionPasswordPrompt({
   hasExistingKeys = false,
   mode: initialMode,
   onClose,
+  onReset,
 }: EncryptionPasswordPromptProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,20 +41,23 @@ export function EncryptionPasswordPrompt({
 
   const mode = initialMode || (hasExistingKeys ? "unlock" : "setup");
 
-  useEffect(() => {
-    if (error) {
-      setLocalError(error);
-    }
-  }, [error]);
+  const currentError = error || localError;
 
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPassword("");
+       
       setConfirmPassword("");
+       
       setRecoveryPhrase("");
+       
       setShowPassword(false);
+       
       setShowRecoveryInput(false);
+       
       setDisplayedRecovery(null);
+       
       setLocalError(null);
     }
   }, [isOpen]);
@@ -63,9 +68,13 @@ export function EncryptionPasswordPrompt({
       return;
     }
     setLocalError(null);
-    const success = await onUnlock(password);
-    if (!success) {
-      setLocalError("Incorrect password. Please try again.");
+    try {
+      const success = await onUnlock(password);
+      if (!success) {
+        setLocalError("Incorrect password. Please try again.");
+      }
+    } catch (err) {
+      setLocalError(String(err));
     }
   };
 
@@ -84,9 +93,15 @@ export function EncryptionPasswordPrompt({
     }
     setLocalError(null);
     if (onSetup) {
-      const result = await onSetup(password);
-      if (result.success && result.recoveryPhrase) {
-        setDisplayedRecovery(result.recoveryPhrase);
+      try {
+        const result = await onSetup(password);
+        if (result.success && result.recoveryPhrase) {
+          setDisplayedRecovery(result.recoveryPhrase);
+        } else if (!result.success) {
+          setLocalError("Failed to set up encryption. Please try again.");
+        }
+      } catch (err) {
+        setLocalError(String(err));
       }
     }
   };
@@ -281,11 +296,22 @@ export function EncryptionPasswordPrompt({
             </div>
           )}
 
-          {(localError || error) && (
+          {currentError && (
             <div className="flex items-center gap-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
-              {localError || error}
+              {currentError}
             </div>
+          )}
+
+          {currentError && onReset && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+              onClick={onReset}
+            >
+              Reset Encryption & Start Fresh
+            </Button>
           )}
 
           {mode === "setup" && (

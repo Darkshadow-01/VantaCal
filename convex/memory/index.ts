@@ -77,18 +77,18 @@ export const getMemories = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let results = await ctx.db
+    const results = await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    results.sort((a, b) => {
+    const sortedResults = [...results].sort((a, b) => {
       const scoreA = a.importance * (1 + a.accessCount * 0.1);
       const scoreB = b.importance * (1 + b.accessCount * 0.1);
       return scoreB - scoreA;
     });
 
-    return args.limit ? results.slice(0, args.limit) : results;
+    return args.limit ? sortedResults.slice(0, args.limit) : sortedResults;
   },
 });
 
@@ -172,12 +172,15 @@ export const updateHabitTrack = mutation({
     completed: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
+    // Fetch all tracks for user and filter by habit name
+    const existingTracks = await ctx.db
       .query("habit_tracks")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .first();
+      .collect();
 
-    if (existing && existing.habit === args.habit) {
+    const existing = existingTracks.find((track) => track.habit === args.habit);
+
+    if (existing) {
       const now = Date.now();
       const today = new Date().toISOString().split("T")[0];
       const completedDates = [...existing.completedDates];

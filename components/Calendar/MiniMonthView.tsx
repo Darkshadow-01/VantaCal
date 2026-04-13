@@ -12,16 +12,20 @@ import {
   addMonths,
   subMonths,
 } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { EventData } from "@/lib/use-encrypted-events";
+import { ChevronLeft, ChevronRight, Gift, PartyPopper } from "lucide-react";
+import type { CalendarEvent } from "@/lib/types";
+import type { HolidaysByDate, Holiday } from "@/lib/holidays";
+import type { BirthdaysByDate, Birthday } from "@/lib/birthdays";
 
 interface MiniMonthViewProps {
   selectedDate: Date;
-  events: EventData[];
+  events: CalendarEvent[];
+  holidays?: HolidaysByDate;
+  birthdays?: BirthdaysByDate;
   onDateSelect: (date: Date) => void;
 }
 
-export function MiniMonthView({ selectedDate, events, onDateSelect }: MiniMonthViewProps) {
+export function MiniMonthView({ selectedDate, events, holidays = {}, birthdays = {}, onDateSelect }: MiniMonthViewProps) {
   const [currentMonth, setCurrentMonth] = useState(selectedDate);
 
   const monthStart = startOfMonth(currentMonth);
@@ -30,9 +34,12 @@ export function MiniMonthView({ selectedDate, events, onDateSelect }: MiniMonthV
   const startDay = monthStart.getDay();
   const emptyDays = Array(startDay).fill(null);
 
-  const eventsByDay = new Map<string, EventData[]>();
+  const eventsByDay = new Map<string, CalendarEvent[]>();
   events.forEach((event) => {
-    const key = format(new Date(event.startTime), "yyyy-MM-dd");
+    if (!event.startTime) return;
+    const eventDate = new Date(event.startTime);
+    if (isNaN(eventDate.getTime())) return;
+    const key = format(eventDate, "yyyy-MM-dd");
     if (!eventsByDay.has(key)) {
       eventsByDay.set(key, []);
     }
@@ -83,6 +90,8 @@ export function MiniMonthView({ selectedDate, events, onDateSelect }: MiniMonthV
         {days.map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const dayEvents = eventsByDay.get(key) || [];
+          const dayHolidays = holidays[key] || [];
+          const dayBirthdays = birthdays[key] || [];
           const isSelected = isSameDay(day, selectedDate);
           const isCurrentMonth = isSameMonth(day, currentMonth);
 
@@ -126,6 +135,16 @@ export function MiniMonthView({ selectedDate, events, onDateSelect }: MiniMonthV
                     <span className="text-[8px] text-gray-500">+</span>
                   )}
                 </div>
+              )}
+
+              {/* Holiday indicator */}
+              {dayHolidays.length > 0 && (
+                <div className="absolute bottom-0.5 w-1 h-1 rounded-full bg-orange-500" title={dayHolidays[0].name} />
+              )}
+
+              {/* Birthday indicator */}
+              {dayBirthdays.length > 0 && (
+                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 rounded-full bg-pink-500" title={`${dayBirthdays[0].name}'s birthday`} />
               )}
             </button>
           );

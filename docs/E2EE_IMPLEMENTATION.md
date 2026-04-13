@@ -133,13 +133,14 @@ The actual decrypted content:
 
 | File | Purpose |
 |------|---------|
-| `lib/e2ee.ts` | Core encryption/decryption functions |
-| `lib/e2ee-hooks.tsx` | React hooks for E2EE state management |
-| `lib/use-encrypted-calendar.tsx` | Calendar-specific encrypted hooks |
+| `src/features/encryption/service/e2ee.ts` | Core encryption/decryption functions |
+| `src/features/encryption/service/hooks/use-encrypted-events.ts` | React hooks for encrypted events |
+| `src/features/encryption/model/types.ts` | Type definitions |
+| `src/features/encryption/service/__tests__/e2ee.test.ts` | E2EE test suite |
 | `components/ui/encryption-prompt.tsx` | Password prompt UI |
 | `components/ui/lock-button.tsx` | Lock app button & overlay |
-| `convex/userKeys/index.ts` | Key storage mutations/queries |
-| `convex/schema.ts` | Updated schema with encryptedPayload |
+| `src/features/users/repository/userKeys.ts` | Key storage mutations/queries |
+| `convex/schema.ts` | Database schema with encryptedPayload |
 
 ## Testing
 

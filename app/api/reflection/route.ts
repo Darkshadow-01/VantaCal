@@ -99,7 +99,7 @@ function calculateSystemBalanceScore(breakdown: WeeklyReflection["systemBreakdow
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, userId, startDate: startDateStr } = body;
+    const { userId, startDate: startDateStr } = body;
 
     if (!userId) {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
@@ -213,11 +213,6 @@ export async function POST(request: NextRequest) {
         confidence: p.confidence,
         actionableStep: p.actionableSteps[0] || "Continue monitoring",
       }));
-
-    const weeklyMemories = (memories || []).filter((m: any) => {
-      const memTime = m.createdAt;
-      return memTime >= startDate.getTime() && memTime <= endDate.getTime();
-    });
 
     const insights: string[] = [];
     if (completionRate >= 90) insights.push("Excellent week! You achieved almost all your planned events.");

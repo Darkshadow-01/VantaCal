@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Clock, MapPin, Repeat, Sparkles, Calendar, AlertTriangle, CheckCircle } from "lucide-react";
-import type { EventData } from "@/lib/use-encrypted-events";
+import type { CalendarEvent } from "@/lib/types";
 
 interface EventPopoverProps {
-  event: EventData;
+  event: CalendarEvent;
   aiInsights?: {
     avgDuration?: number;
     completionRate?: number;
@@ -19,17 +19,18 @@ interface EventPopoverProps {
 }
 
 export function EventPopover({ event, aiInsights, onClose, onEdit, onDelete }: EventPopoverProps) {
-  const startTime = new Date(event.startTime);
-  const endTime = new Date(event.endTime);
-  const durationMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+  const startTime = event.startTime ? new Date(event.startTime) : new Date();
+  const endTime = event.endTime ? new Date(event.endTime) : new Date(startTime.getTime() + 3600000);
+  const isValidTime = !isNaN(startTime.getTime()) && !isNaN(endTime.getTime());
+  const durationMinutes = isValidTime ? (endTime.getTime() - startTime.getTime()) / (1000 * 60) : 60;
 
-  const getSystemColor = (system: string) => {
+  const getSystemColor = (system?: string) => {
     const colors: Record<string, string> = {
       Health: "bg-green-500",
       Work: "bg-blue-500",
       Relationships: "bg-purple-500",
     };
-    return colors[system] || "bg-gray-500";
+    return colors[system || ""] || "bg-gray-500";
   };
 
   return (
@@ -52,7 +53,7 @@ export function EventPopover({ event, aiInsights, onClose, onEdit, onDelete }: E
                 {event.recurrence && (
                   <span className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded text-sm">
                     <Repeat className="w-3 h-3" />
-                    {event.recurrence}
+                    {typeof event.recurrence === 'string' ? event.recurrence : String(event.recurrence?.type)}
                   </span>
                 )}
               </div>
@@ -177,7 +178,7 @@ export function EventPopover({ event, aiInsights, onClose, onEdit, onDelete }: E
   );
 }
 
-export function MiniEventPopover({ event, position }: { event: EventData; position: { x: number; y: number } }) {
+export function MiniEventPopover({ event, position }: { event: CalendarEvent; position: { x: number; y: number } }) {
   return (
     <div 
       className="fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 p-3 min-w-[250px] pointer-events-none"
@@ -193,7 +194,7 @@ export function MiniEventPopover({ event, position }: { event: EventData; positi
         </h4>
         <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
           <p>
-            {format(new Date(event.startTime), "h:mm a")} - {format(new Date(event.endTime), "h:mm a")}
+            {event.startTime ? format(new Date(event.startTime), "h:mm a") : "All day"} - {event.endTime ? format(new Date(event.endTime), "h:mm a") : ""}
           </p>
           <p className="capitalize">{event.system}</p>
         </div>

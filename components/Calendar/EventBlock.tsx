@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { MoreVertical, Pencil, Trash2, Clock, AlertTriangle } from "lucide-react";
-import type { EventData } from "@/lib/use-encrypted-events";
+import type { CalendarEvent } from "@/lib/types";
 
 interface SystemColors {
   bg: string;
@@ -14,7 +14,7 @@ interface SystemColors {
 }
 
 interface EventBlockProps {
-  event: EventData;
+  event: CalendarEvent;
   systemColors: SystemColors;
   onClick: (e: React.MouseEvent) => void;
   style?: { top: string; height: string };
@@ -33,12 +33,14 @@ export function EventBlock({
 }: EventBlockProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
-  const startTime = new Date(event.startTime);
-  const endTime = new Date(event.endTime);
-  const durationMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+  
+  const startTime = event.startTime ? new Date(event.startTime) : new Date();
+  const endTime = event.endTime ? new Date(event.endTime) : new Date(startTime.getTime() + 3600000);
+  const isValidTime = !isNaN(startTime.getTime()) && !isNaN(endTime.getTime());
+  const durationMinutes = isValidTime ? (endTime.getTime() - startTime.getTime()) / (1000 * 60) : 60;
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData("eventId", event._id!);
+    e.dataTransfer.setData("eventId", event.id);
     e.dataTransfer.effectAllowed = "move";
   };
 

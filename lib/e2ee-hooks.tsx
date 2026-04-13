@@ -60,6 +60,8 @@ interface UserKeysData {
   recoveryEncryptedMasterKey?: string;
   recoverySalt?: string;
   recoveryIv?: string;
+  iterations?: number;
+  stretchingRounds?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -85,15 +87,8 @@ export function useE2EE(userId: string | null | undefined) {
   const createUserKeys = useMutation(userKeysApi.userKeys.index.createUserKeys);
   const updateUserKeys = useMutation(userKeysApi.userKeys.index.updateUserKeys);
 
-  useEffect(() => {
-    if (getUserKeys) {
-      setState((prev) => ({
-        ...prev,
-        isInitialized: true,
-        hasRecoveryKey: !!getUserKeys.recoveryEncryptedMasterKey,
-      }));
-    }
-  }, [getUserKeys]);
+  const isInitialized = !!getUserKeys;
+  const hasRecoveryKey = !!getUserKeys?.recoveryEncryptedMasterKey;
 
   const initializeEncryption = useCallback(
     async (password: string): Promise<{ success: boolean; recoveryPhrase?: string }> => {
@@ -113,6 +108,8 @@ export function useE2EE(userId: string | null | undefined) {
               encryptedMasterKey: getUserKeys.encryptedMasterKey,
               salt: getUserKeys.salt,
               iv: getUserKeys.iv,
+              iterations: getUserKeys.iterations || 1000000,
+              stretchingRounds: getUserKeys.stretchingRounds || 3,
             },
             passwordKey
           );
@@ -277,6 +274,8 @@ export function useE2EE(userId: string | null | undefined) {
             encryptedMasterKey: getUserKeys.encryptedMasterKey,
             salt: getUserKeys.salt,
             iv: getUserKeys.iv,
+            iterations: getUserKeys.iterations || 1000000,
+            stretchingRounds: getUserKeys.stretchingRounds || 3,
           },
           currentKey
         );
@@ -319,6 +318,8 @@ export function useE2EE(userId: string | null | undefined) {
 
   return {
     ...state,
+    isInitialized,
+    hasRecoveryKey,
     recoveryPhrase,
     unlockWithPassword,
     unlockWithRecoveryPhrase,
@@ -329,5 +330,6 @@ export function useE2EE(userId: string | null | undefined) {
     clearError,
     clearRecoveryPhrase,
     hasMasterKey: hasMasterKey(),
+    initializeEncryption,
   };
 }

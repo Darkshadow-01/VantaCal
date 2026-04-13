@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "../../../convex/_generated/api";
 
 // NOTE: Events are now encrypted client-side using E2EE.
 // This API route runs on the server and CANNOT access the browser's crypto key.
@@ -17,11 +15,8 @@ import { api } from "../../../convex/_generated/api";
 // 2. Implement server-side decryption with the master key
 //    - Would require the master key to be available on the server
 //    - This defeats the purpose of E2EE
-// 
+//
 // For now, the event-related processing is commented out/stubbed below.
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const memoryApi = api as any;
 
 interface ConflictCheck {
   hasConflict: boolean;
@@ -65,31 +60,18 @@ interface ScheduleOptimization {
   }>;
 }
 
-interface SmartReschedule {
-  originalEvent: {
-    id: string;
-    title: string;
-    system: string;
-    startTime: number;
-  };
-  missedCount: number;
-  pattern: string;
-  suggestedSlots: Array<{
-    startTime: number;
-    endTime: number;
-    dayOfWeek: string;
-    confidence: number;
-    reason: string;
-  }>;
-  action: "reschedule" | "drop" | "reduce_frequency";
-}
-
-function calculateOverlap(start1: number, end1: number, start2: number, end2: number): number {
+function calculateOverlap(
+  start1: number,
+  end1: number,
+  start2: number,
+  end2: number
+): number {
   const overlapStart = Math.max(start1, start2);
   const overlapEnd = Math.min(end1, end2);
   return Math.max(0, (overlapEnd - overlapStart) / (1000 * 60));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function checkConflicts(
   events: any[],
   newEvent: { startTime: number; endTime: number; system: string }
@@ -134,6 +116,7 @@ async function checkConflicts(
   };
 }
 
+ 
 async function analyzeBalance(
   events: any[],
   missedTasks: any[]

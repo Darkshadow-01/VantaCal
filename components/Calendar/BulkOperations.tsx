@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Trash2, Tag, Calendar, Move, CheckSquare, Square, X } from "lucide-react";
-import type { EventData } from "@/lib/use-encrypted-events";
+import { Trash2, Tag, Calendar, CheckSquare, Square, X } from "lucide-react";
+import type { CalendarEvent } from "@/lib/types";
 
 interface BulkOperationsProps {
-  selectedEvents: EventData[];
-  events: EventData[];
-  onEventsChange: (events: EventData[]) => void;
+  selectedEvents: CalendarEvent[];
+  events: CalendarEvent[];
+  onEventsChange: (events: CalendarEvent[]) => void;
   systemColors: Record<string, any>;
 }
 
@@ -18,7 +18,6 @@ export function BulkOperations({
   onEventsChange,
   systemColors,
 }: BulkOperationsProps) {
-  const [showActions, setShowActions] = useState(false);
 
   const handleSelectAll = () => {
     if (selectedEvents.length === events.length) {
@@ -29,15 +28,15 @@ export function BulkOperations({
   };
 
   const handleDeleteSelected = () => {
-    const selectedIds = new Set(selectedEvents.map((e) => e._id));
-    const updated = events.filter((e) => !selectedIds.has(e._id));
+    const selectedIds = new Set(selectedEvents.map((e) => e.id));
+    const updated = events.filter((e) => !selectedIds.has(e.id));
     onEventsChange(updated);
   };
 
   const handleChangeSystem = (system: "Health" | "Work" | "Relationships") => {
-    const selectedIds = new Set(selectedEvents.map((e) => e._id));
+    const selectedIds = new Set(selectedEvents.map((e) => e.id));
     const updated = events.map((e) =>
-      selectedIds.has(e._id)
+      selectedIds.has(e.id)
         ? { ...e, system, color: systemColors[system].bg }
         : e
     );
@@ -45,10 +44,10 @@ export function BulkOperations({
   };
 
   const handleReschedule = (days: number) => {
-    const selectedIds = new Set(selectedEvents.map((e) => e._id));
+    const selectedIds = new Set(selectedEvents.map((e) => e.id));
     const msPerDay = 24 * 60 * 60 * 1000;
     const updated = events.map((e) =>
-      selectedIds.has(e._id)
+      selectedIds.has(e.id) && e.startTime && e.endTime
         ? {
             ...e,
             startTime: e.startTime + days * msPerDay,
@@ -104,13 +103,13 @@ export function BulkOperations({
       <div className="max-h-32 overflow-y-auto space-y-1">
         {selectedEvents.map((event) => (
           <div
-            key={event._id}
+            key={event.id}
             className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
           >
-            <div className={`w-2 h-2 rounded-full ${systemColors[event.system]?.bg || "bg-gray-500"}`} />
+            <div className={`w-2 h-2 rounded-full ${systemColors[event.system as keyof typeof systemColors]?.bg || "bg-gray-500"}`} />
             <span className="flex-1 truncate">{event.title}</span>
             <span className="text-xs text-gray-500">
-              {format(new Date(event.startTime), "MMM d")}
+              {event.startTime ? format(new Date(event.startTime), "MMM d") : "N/A"}
             </span>
           </div>
         ))}
@@ -176,7 +175,7 @@ export function EventCheckbox({
   isSelected,
   onToggle,
 }: {
-  event: EventData;
+  event: CalendarEvent;
   isSelected: boolean;
   onToggle: () => void;
 }) {
@@ -200,14 +199,14 @@ export function EventCheckbox({
   );
 }
 
-export function useBulkSelection(initialEvents: EventData[]) {
-  const [selectedEvents, setSelectedEvents] = useState<EventData[]>([]);
+export function useBulkSelection(initialEvents: CalendarEvent[]) {
+  const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
 
-  const toggleEvent = (event: EventData) => {
-    const isSelected = selectedEvents.some((e) => e._id === event._id);
+  const toggleEvent = (event: CalendarEvent) => {
+    const isSelected = selectedEvents.some((e) => e.id === event.id);
     if (isSelected) {
-      setSelectedEvents(selectedEvents.filter((e) => e._id !== event._id));
+      setSelectedEvents(selectedEvents.filter((e) => e.id !== event.id));
     } else {
       setSelectedEvents([...selectedEvents, event]);
     }
@@ -222,7 +221,7 @@ export function useBulkSelection(initialEvents: EventData[]) {
   };
 
   const isEventSelected = (eventId: string) => {
-    return selectedEvents.some((e) => e._id === eventId);
+    return selectedEvents.some((e) => e.id === eventId);
   };
 
   return {

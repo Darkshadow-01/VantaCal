@@ -1,24 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { format, addHours } from "date-fns";
-import { Sparkles, AlertTriangle } from "lucide-react";
-import type { EventData } from "@/lib/use-encrypted-events";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect, useRef } from "react";
+import { format, addHours, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths } from "date-fns";
+import { Sparkles, AlertTriangle, Calendar, Clock, MapPin, Repeat, FileText, X, ChevronLeft, ChevronRight, Bell, Users, Mic, Loader2 } from "lucide-react";
+import type { CalendarEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { findAvailableSlots } from "@/src/features/calendar/service/meeting-scheduler";
 
 interface SystemColors {
   bg: string;
@@ -37,11 +24,16 @@ interface EventFormData {
   system: "Health" | "Work" | "Relationships";
   color?: string;
   recurrence?: string;
+  recurrenceEndType?: "never" | "onDate" | "after";
+  recurrenceEndDate?: string;
+  recurrenceCount?: number;
   location?: string;
+  reminder?: number;
+  guests?: string[];
 }
 
 interface EventModalProps {
-  event?: EventData | null;
+  event?: CalendarEvent | null;
   selectedSlot?: { date: Date; hour?: number } | null;
   systemColors: Record<"Health" | "Work" | "Relationships", SystemColors>;
   onSave: (data: EventFormData) => Promise<void>;
@@ -68,14 +60,41 @@ export function EventModal({
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
   const [location, setLocation] = useState(event?.location || "");
-  const [recurrence, setRecurrence] = useState<string>(event?.recurrence || "");
+  const [recurrence, setRecurrence] = useState<string>(typeof event?.recurrence === 'string' ? event.recurrence : "");
+  const [recurrenceEndType, setRecurrenceEndType] = useState<"never" | "onDate" | "after">("never");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
+  const [recurrenceCount, setRecurrenceCount] = useState(10);
+  const [guests, setGuests] = useState<string[]>(event?.guests || []);
+  const [newGuest, setNewGuest] = useState("");
+  const [reminder, setReminder] = useState<number>(event?.reminder || 0);
+  const [customColor, setCustomColor] = useState<string | undefined>(event?.color);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [pickerDate, setPickerDate] = useState(new Date());
+  const datePickerRef = useRef<HTMLDivElement>(null);
+  const [aiInput, setAiInput] = useState("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [showAiInput, setShowAiInput] = useState(false);
+  const [suggestedTimes, setSuggestedTimes] = useState<string[]>([]);
+  const [showSuggestedTimes, setShowSuggestedTimes] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+        setShowDatePicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (event) {
-      const start = new Date(event.startTime);
-      const end = new Date(event.endTime);
+      const start = event.startTime ? new Date(event.startTime) : new Date();
+      const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 3600000);
       setStartDate(format(start, "yyyy-MM-dd"));
       setStartTime(format(start, "HH:mm"));
       setEndDate(format(end, "yyyy-MM-dd"));
@@ -92,6 +111,15 @@ export function EventModal({
     }
   }, [event, selectedSlot]);
 
+  useEffect(() => {
+    if (startDate) {
+      const date = new Date(startDate);
+      const slots = findAvailableSlots(date.getDate(), date.getMonth(), date.getFullYear(), [], 9, 17, 60);
+      const formattedTimes = slots.slice(0, 5).map(slot => `${slot.startHour}:00`);
+      setSuggestedTimes(formattedTimes);
+    }
+  }, [startDate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -105,8 +133,14 @@ export function EventModal({
         endTime: new Date(`${endDate}T${endTime}`).getTime(),
         allDay,
         system,
+        color: customColor,
         location: location.trim() || undefined,
-        recurrence: recurrence || undefined,
+        recurrence: recurrence === "none" ? undefined : recurrence,
+        recurrenceEndType: recurrence !== "none" ? recurrenceEndType : undefined,
+        recurrenceEndDate: recurrenceEndType === "onDate" && recurrenceEndDate ? recurrenceEndDate : undefined,
+        recurrenceCount: recurrenceEndType === "after" ? recurrenceCount : undefined,
+        reminder: reminder > 0 ? reminder : undefined,
+        guests: guests.length > 0 ? guests : undefined,
       });
     } finally {
       setIsSaving(false);
@@ -123,222 +157,593 @@ export function EventModal({
     }
   };
 
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {event ? "Edit Event" : "Create New Event"}
-          </DialogTitle>
-          {!event && (
-            <DialogDescription className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-purple-500" />
-              AI will suggest optimal buffers
-            </DialogDescription>
-          )}
-        </DialogHeader>
+  const handleAiParse = async () => {
+    if (!aiInput.trim()) return;
+    setIsAiLoading(true);
+    try {
+      const response = await fetch("/api/localAI", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agent: "parse", input: aiInput }),
+      });
+      const data = await response.json();
+      if (data.success && data.result) {
+        const parsed = data.result as { title: string; system: "Health" | "Work" | "Relationships"; startTime: { hour: number; minute: number }; duration: number };
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.system) setSystem(parsed.system);
+        if (parsed.startTime) {
+          setStartTime(`${parsed.startTime.hour.toString().padStart(2, '0')}:${parsed.startTime.minute.toString().padStart(2, '0')}`);
+        }
+        if (parsed.duration) {
+          const start = new Date(`${startDate}T${startTime}`);
+          const end = new Date(start.getTime() + parsed.duration * 60000);
+          setEndTime(format(end, "HH:mm"));
+        }
+        setShowAiInput(false);
+        setAiInput("");
+      }
+    } catch (err) {
+      console.error("AI parse error:", err);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
+  const handleVoiceInput = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+      }
+      if (transcript) {
+        setAiInput(transcript);
+        setShowAiInput(true);
+      }
+    };
+    recognition.start();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div 
+        className="bg-white dark:bg-[#1A1D24] rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-[#333] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-5 border-b border-gray-100 dark:border-[#333]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {event ? "Edit event" : "Create event"}
+              </h2>
+              {!event && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                  AI will suggest optimal buffers
+                </p>
+              )}
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* AI Input Toggle */}
+          {!showAiInput && (
+            <button
+              type="button"
+              onClick={() => setShowAiInput(true)}
+              className="flex items-center gap-2 text-sm text-[#5B8DEF] hover:text-[#4A7EDE] transition-colors"
+            >
+              <Sparkles className="w-4 h-4" />
+              Add with AI
+            </button>
+          )}
+
+          {showAiInput && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                placeholder="e.g., Meeting tomorrow at 3pm"
+                className="flex-1 px-3 py-2 bg-gray-100 dark:bg-[#252830] border border-transparent rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-[#5B8DEF]"
+              />
+              <button
+                type="button"
+                onClick={handleVoiceInput}
+                disabled={isListening}
+                className={cn("p-2 rounded-lg transition-colors", isListening ? "bg-red-500 text-white" : "bg-gray-100 dark:bg-[#252830] text-gray-500 hover:text-gray-700")}
+              >
+                {isListening ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={handleAiParse}
+                disabled={!aiInput.trim() || isAiLoading}
+                className="px-3 py-2 bg-[#5B8DEF] text-white rounded-lg text-sm hover:bg-[#4A7EDE] disabled:opacity-50"
+              >
+                {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Parse"}
+              </button>
+            </div>
+          )}
+
+          {/* Title Input */}
+          <div>
+            <input
+              type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Event title"
-              required
+              placeholder="Add title"
+              className="w-full text-lg font-medium bg-transparent border-none outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white focus:ring-0 p-0"
+              autoFocus
             />
           </div>
 
           {/* System Selection */}
-          <div className="space-y-2">
-            <Label>System *</Label>
+          <div>
             <div className="grid grid-cols-3 gap-2">
               {(["Health", "Work", "Relationships"] as const).map((sys) => (
                 <button
                   key={sys}
                   type="button"
-                  onClick={() => setSystem(sys)}
+                  onClick={() => { setSystem(sys); setCustomColor(undefined); }}
                   className={cn(
-                    "p-3 rounded-lg border-2 transition-all text-center",
-                    system === sys
+                    "p-2.5 rounded-xl border-2 transition-all duration-200 text-center group",
+                    system === sys && !customColor
                       ? `${systemColors[sys].border} ${systemColors[sys].bgLight}`
-                      : "border-input hover:border-muted-foreground/50"
+                      : "border-gray-100 dark:border-[#333] hover:border-gray-300 dark:hover:border-[#444] hover:scale-[1.02] active:scale-[0.98]"
                   )}
                 >
-                  <div className={cn("w-4 h-4 rounded-full mx-auto mb-1", systemColors[sys].bg)} />
-                  <span className="text-sm font-medium">{sys}</span>
+                  <div className={cn("w-3 h-3 rounded-full mx-auto mb-1.5 transition-transform", systemColors[sys].bg, system === sys && !customColor && "scale-110")} />
+                  <span className={cn("text-xs font-medium", system === sys && !customColor ? systemColors[sys].text : "text-gray-600 dark:text-gray-400")}>{sys}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* All Day Toggle */}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="allDay"
-              checked={allDay}
-              onCheckedChange={(checked) => setAllDay(checked as boolean)}
-            />
-            <Label htmlFor="allDay" className="font-normal">All day event</Label>
+          {/* Custom Color Picker */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 block">Or choose a color</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {[
+                { bg: "bg-red-500", value: "red" },
+                { bg: "bg-orange-500", value: "orange" },
+                { bg: "bg-yellow-500", value: "yellow" },
+                { bg: "bg-green-500", value: "green" },
+                { bg: "bg-teal-500", value: "teal" },
+                { bg: "bg-blue-500", value: "blue" },
+                { bg: "bg-indigo-500", value: "indigo" },
+                { bg: "bg-purple-500", value: "purple" },
+                { bg: "bg-pink-500", value: "pink" },
+              ].map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => { setCustomColor(color.value); setSystem("Work"); }}
+                  className={cn(
+                    "w-6 h-6 rounded-full transition-all duration-150 hover:scale-110",
+                    color.bg,
+                    customColor === color.value ? "ring-2 ring-offset-2 ring-gray-400" : ""
+                  )}
+                  title={color.value}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Date/Time Fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start {allDay ? "Date" : "Date & Time"}</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  required
-                  className="flex-1"
-                />
-                {!allDay && (
-                  <Input
-                    type="time"
+          {/* Date & Time */}
+          <div className="space-y-3">
+            {/* Date picker button */}
+            <div className="relative" ref={datePickerRef}>
+              <button
+                type="button"
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group"
+                onClick={() => setShowDatePicker(!showDatePicker)}
+              >
+                <Calendar className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{startDate ? format(new Date(startDate), "EEE, MMM d, yyyy") : "Select date"}</span>
+                  </div>
+                  {!allDay && startTime && endTime && (
+                    <div className="text-sm text-gray-500">{startTime} - {endTime}</div>
+                  )}
+                </div>
+              </button>
+
+              {/* Date picker dropdown */}
+              {showDatePicker && (
+                <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1A1D24] rounded-xl shadow-xl border border-gray-200 dark:border-[#333] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-3 border-b border-gray-100 dark:border-[#333]">
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setPickerDate(subMonths(pickerDate, 1))}
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      </button>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {format(pickerDate, "MMMM yyyy")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPickerDate(addMonths(pickerDate, 1))}
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
+                        <div key={i} className="text-xs text-center text-gray-400 font-medium">{day}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {eachDayOfInterval({
+                        start: startOfMonth(pickerDate),
+                        end: endOfMonth(pickerDate)
+                      }).map((day, idx) => {
+                        const dateStr = format(day, "yyyy-MM-dd");
+                        const isSelected = startDate === dateStr;
+                        const isCurrentMonth = isSameMonth(day, pickerDate);
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setStartDate(dateStr);
+                              setEndDate(dateStr);
+                              setShowDatePicker(false);
+                            }}
+                            className={cn(
+                              "w-8 h-8 rounded-full text-sm transition-all duration-150",
+                              isCurrentMonth ? "text-gray-700 dark:text-gray-200" : "text-gray-300 dark:text-gray-600",
+                              isSelected && "bg-blue-500 text-white",
+                              !isSelected && isToday(day) && "ring-2 ring-blue-300 ring-inset",
+                              !isSelected && isCurrentMonth && "hover:bg-gray-100 dark:hover:bg-[#252830]"
+                            )}
+                          >
+                            {format(day, "d")}
+                          </button>
+                        );
+                      })}
+                </div>
+              </div>
+
+              {suggestedTimes.length > 0 && !allDay && (
+                <div className="px-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSuggestedTimes(!showSuggestedTimes)}
+                    className="text-xs text-[#5B8DEF] hover:text-[#4A7EDE] flex items-center gap-1"
+                  >
+                    <Clock className="w-3 h-3" />
+                    Suggested times
+                  </button>
+                  {showSuggestedTimes && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {suggestedTimes.map(time => (
+                        <button
+                          key={time}
+                          type="button"
+                          onClick={() => { setStartTime(time); setShowSuggestedTimes(false); }}
+                          className="px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                        >
+                          {time}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+              )}
+            </div>
+
+            {/* All Day Toggle */}
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors cursor-pointer" onClick={() => setAllDay(!allDay)}>
+              <div className={cn(
+                "w-10 h-6 rounded-full transition-all duration-300 relative",
+                allDay ? "bg-blue-500" : "bg-gray-200 dark:bg-gray-700"
+              )}>
+                <div className={cn(
+                  "absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300",
+                  allDay ? "left-5" : "left-1"
+                )} />
+              </div>
+              <span className="text-sm text-gray-600 dark:text-gray-300">All-day</span>
+            </div>
+
+            {/* Time dropdowns when not all-day */}
+            {!allDay && (
+              <div className="grid grid-cols-2 gap-3 px-3">
+                <div className="relative group">
+                  <select
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    required
-                    className="w-28"
-                  />
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End {allDay ? "Date" : "Date & Time"}</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  required
-                  className="flex-1"
-                />
-                {!allDay && (
-                  <Input
-                    type="time"
+                    className="w-full appearance-none p-2.5 pl-10 rounded-lg border border-gray-200 dark:border-[#333] bg-transparent text-sm text-gray-700 dark:text-gray-200 cursor-pointer hover:border-gray-300 dark:hover:border-[#444] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Array.from({ length: 24 * 2 }, (_, i) => {
+                      const h = Math.floor(i / 2);
+                      const m = i % 2 === 0 ? "00" : "30";
+                      const val = `${h.toString().padStart(2, "0")}:${m}`;
+                      return <option key={val} value={val}>{format(new Date(`2024-01-01T${val}`), "h:mm a")}</option>;
+                    })}
+                  </select>
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+                <div className="relative group">
+                  <select
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    required
-                    className="w-28"
-                  />
-                )}
+                    className="w-full appearance-none p-2.5 pl-10 rounded-lg border border-gray-200 dark:border-[#333] bg-transparent text-sm text-gray-700 dark:text-gray-200 cursor-pointer hover:border-gray-300 dark:hover:border-[#444] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Array.from({ length: 24 * 2 }, (_, i) => {
+                      const h = Math.floor(i / 2);
+                      const m = i % 2 === 0 ? "00" : "30";
+                      const val = `${h.toString().padStart(2, "0")}:${m}`;
+                      return <option key={val} value={val}>{format(new Date(`2024-01-01T${val}`), "h:mm a")}</option>;
+                    })}
+                  </select>
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Location */}
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
+            <MapPin className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+            <input
+              type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Add location"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add description"
-              rows={3}
+              className="flex-1 bg-transparent border-none outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm text-gray-700 dark:text-gray-200"
             />
           </div>
 
           {/* Recurrence */}
-          <div className="space-y-2">
-            <Label htmlFor="recurrence">Recurrence</Label>
-            <Select value={recurrence} onValueChange={setRecurrence}>
-              <SelectTrigger>
-                <SelectValue placeholder="Does not repeat" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Does not repeat</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="biweekly">Every 2 weeks</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
+            <Repeat className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+            <select
+              value={recurrence}
+              onChange={(e) => setRecurrence(e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
+            >
+              <option value="none">Does not repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Every 2 weeks</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+
+          {/* Recurrence End Options */}
+          {recurrence !== "none" && (
+            <div className="pl-11 space-y-2">
+              <select
+                value={recurrenceEndType}
+                onChange={(e) => setRecurrenceEndType(e.target.value as typeof recurrenceEndType)}
+                className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
+              >
+                <option value="never">Never ends</option>
+                <option value="onDate">Ends on date</option>
+                <option value="after">Ends after occurrences</option>
+              </select>
+              
+              {recurrenceEndType === "onDate" && (
+                <input
+                  type="date"
+                  value={recurrenceEndDate}
+                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                  className="w-full bg-gray-50 dark:bg-[#252830] border border-gray-200 dark:border-[#333] rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200"
+                />
+              )}
+              
+              {recurrenceEndType === "after" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">After</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={recurrenceCount}
+                    onChange={(e) => setRecurrenceCount(Number(e.target.value))}
+                    className="w-16 bg-gray-50 dark:bg-[#252830] border border-gray-200 dark:border-[#333] rounded-lg px-2 py-1 text-sm text-gray-700 dark:text-gray-200"
+                  />
+                  <span className="text-sm text-gray-500">occurrences</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reminder */}
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
+            <Bell className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+            <select
+              value={reminder}
+              onChange={(e) => setReminder(Number(e.target.value))}
+              className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
+            >
+              <option value={0}>No reminder</option>
+              <option value={5}>5 minutes before</option>
+              <option value={10}>10 minutes before</option>
+              <option value={15}>15 minutes before</option>
+              <option value={30}>30 minutes before</option>
+              <option value={60}>1 hour before</option>
+              <option value={1440}>1 day before</option>
+            </select>
+          </div>
+
+          {/* Guests */}
+          <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group">
+            <Users className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors mt-0.5" />
+            <div className="flex-1">
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-sm text-gray-700 dark:text-gray-200">Add guests</span>
+                {guests.length > 0 && (
+                  <span className="text-xs text-gray-400">({guests.length})</span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {guests.map((guest, idx) => (
+                  <span 
+                    key={idx} 
+                    className="inline-flex items-center gap-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full"
+                  >
+                    {guest}
+                    <button 
+                      type="button"
+                      onClick={() => setGuests(guests.filter((_, i) => i !== idx))}
+                      className="hover:text-blue-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <input
+                  type="email"
+                  value={newGuest}
+                  onChange={(e) => setNewGuest(e.target.value)}
+                  placeholder="Enter email"
+                  className="flex-1 bg-transparent border-b border-gray-200 dark:border-[#333] outline-none text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newGuest.trim()) {
+                      setGuests([...guests, newGuest.trim()]);
+                      setNewGuest("");
+                    }
+                  }}
+                />
+                {newGuest.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => { setGuests([...guests, newGuest.trim()]); setNewGuest(""); }}
+                    className="text-xs text-blue-500 hover:text-blue-600"
+                  >
+                    Add
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
+            <FileText className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors mt-0.5" />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add description"
+              rows={2}
+              className="flex-1 bg-transparent border-none outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm text-gray-700 dark:text-gray-200 resize-none"
+            />
           </div>
 
           {/* AI Buffer Suggestion */}
           {!event && (
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
-              <div className="flex items-start gap-2">
-                <Sparkles className="w-4 h-4 text-purple-500 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                    AI Buffer Prediction
-                  </p>
-                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                    After creating this event, the Scheduler Agent will analyze your schedule and suggest optimal buffer times.
-                  </p>
-                </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3.5 border border-purple-100 dark:border-purple-800/50">
+              <div className="flex items-start gap-2.5">
+                <Sparkles className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
+                  After creating this event, the Scheduler Agent will analyze your schedule and suggest optimal buffer times.
+                </p>
               </div>
             </div>
           )}
 
-          <DialogFooter className="flex items-center justify-between pt-4">
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#333]">
             <div>
               {event && onDelete && (
                 showDeleteConfirm ? (
-                  <div className="flex items-center gap-2">
-                    <Button
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
                       onClick={() => setShowDeleteConfirm(false)}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
                     >
                       Cancel
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                       type="button"
-                      variant="destructive"
-                      size="sm"
                       onClick={handleDelete}
                       disabled={isSaving}
+                      className="px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
                     >
-                      Confirm Delete
-                    </Button>
+                      Delete
+                    </button>
                   </div>
                 ) : (
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="text-destructive hover:text-destructive"
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                   >
-                    <AlertTriangle className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
+                    <AlertTriangle className="w-4 h-4" />
+                  </button>
                 )
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+              >
                 Cancel
-              </Button>
-              <Button type="submit" disabled={isSaving || !title.trim()} isLoading={isSaving}>
-                {event ? "Update" : "Create"}
-                {!isSaving && !event && <Sparkles className="w-4 h-4 ml-2" />}
-              </Button>
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving || !title.trim()}
+                className={cn(
+                  "px-5 py-2 text-sm font-medium text-white rounded-full transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg",
+                  !title.trim() || isSaving
+                    ? "bg-gray-300 dark:bg-gray-700 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/30"
+                )}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Saving...
+                  </span>
+                ) : event ? (
+                  "Update"
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    Create
+                    <Sparkles className={cn("w-4 h-4 transition-all", isHovered ? "opacity-100 scale-100" : "opacity-0 scale-50")} />
+                  </span>
+                )}
+              </button>
             </div>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

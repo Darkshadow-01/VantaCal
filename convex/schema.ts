@@ -34,11 +34,66 @@ export default defineSchema({
 
   events: defineTable({
     userId: v.string(),
+    calendarId: v.optional(v.id("shared_calendars")),
     encryptedPayload: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_calendar", ["calendarId"]),
+
+  // Tasks table - encrypted like events
+  tasks: defineTable({
+    userId: v.string(),
+    workspaceId: v.optional(v.id("workspaces")),
+    eventId: v.optional(v.id("events")),
+    encryptedPayload: v.string(),
+    completed: v.boolean(),
+    dueDate: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"])
+    .index("by_dueDate", ["dueDate"])
+    .index("by_event", ["eventId"])
+    .index("by_completed", ["completed"]),
+
+  // Workspaces for team collaboration
+  workspaces: defineTable({
+    name: v.string(),
+    ownerId: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_owner", ["ownerId"]),
+
+  // Workspace members
+  workspaceMembers: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.string(),
+    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("member")),
+    joinedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_workspace_user", ["workspaceId", "userId"]),
+
+  // Google Calendar credentials (encrypted)
+  googleCredentials: defineTable({
+    userId: v.string(),
+    workspaceId: v.optional(v.id("workspaces")),
+    encryptedAccessToken: v.string(),
+    encryptedRefreshToken: v.string(),
+    tokenExpiry: v.number(),
+    calendarId: v.optional(v.string()),
+    syncToken: v.optional(v.string()),
+    lastSyncedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"]),
 
   memories: defineTable({
     userId: v.string(),
@@ -229,4 +284,48 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_week", ["userId", "weekStart"]),
+
+  shared_calendars: defineTable({
+    ownerId: v.string(),
+    name: v.string(),
+    color: v.string(),
+    description: v.optional(v.string()),
+    isDefault: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_owner", ["ownerId"]),
+
+  calendar_shares: defineTable({
+    calendarId: v.id("shared_calendars"),
+    userId: v.string(),
+    permission: v.union(v.literal("view"), v.literal("edit"), v.literal("admin")),
+    addedAt: v.number(),
+  })
+    .index("by_calendar", ["calendarId"])
+    .index("by_user", ["userId"])
+    .index("by_calendar_user", ["calendarId", "userId"]),
+
+  calendar_invitations: defineTable({
+    calendarId: v.id("shared_calendars"),
+    email: v.string(),
+    permission: v.union(v.literal("view"), v.literal("edit"), v.literal("admin")),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
+    invitedBy: v.string(),
+    invitedAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index("by_calendar", ["calendarId"])
+    .index("by_email", ["email"])
+    .index("by_email_status", ["email", "status"]),
+
+  calendar_presence: defineTable({
+    calendarId: v.id("shared_calendars"),
+    userId: v.string(),
+    userName: v.string(),
+    status: v.union(v.literal("active"), v.literal("idle"), v.literal("away")),
+    lastSeen: v.number(),
+  })
+    .index("by_calendar", ["calendarId"])
+    .index("by_calendar_user", ["calendarId", "userId"]),
 });

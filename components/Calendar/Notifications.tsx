@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { format, differenceInMinutes } from "date-fns";
 import { Bell, BellOff, Clock, CheckCircle, XCircle } from "lucide-react";
 import { hasMasterKey } from "@/lib/e2ee";
-import type { EventData } from "@/lib/use-encrypted-events";
+import type { CalendarEvent } from "@/lib/types";
 
 export interface Reminder {
   id: string;
@@ -15,7 +15,7 @@ export interface Reminder {
 }
 
 interface NotificationCenterProps {
-  events: EventData[];
+  events: CalendarEvent[];
   reminders: Reminder[];
   onReminderChange: (reminders: Reminder[]) => void;
 }
@@ -37,8 +37,60 @@ export function NotificationCenter({
   const [activeReminders, setActiveReminders] = useState<Reminder[]>(reminders);
   const [showSettings, setShowSettings] = useState(false);
 
+  const updateReminderStatus = (reminderId: string, updates: Partial<Reminder>) => {
+    const updated = activeReminders.map((r) =>
+      r.id === reminderId ? { ...r, ...updates } : r
+    );
+    setActiveReminders(updated);
+    onReminderChange(updated);
+  };
+
+  const sendNotification = (event: CalendarEvent, reminder: Reminder) => {
+    if (permission !== "granted") return;
+
+    const minutesLabel = reminder.minutesBefore >= 60
+      ? `${reminder.minutesBefore / 60} hour${reminder.minutesBefore >= 120 ? "s" : ""}`
+      : `${reminder.minutesBefore} minute${reminder.minutesBefore !== 1 ? "s" : ""}`;
+
+    const eventStart = event.startTime ? new Date(event.startTime) : null;
+    const isValidStart = eventStart && !isNaN(eventStart.getTime());
+    const timeStr = isValidStart ? format(eventStart, "h:mm a") : "TBD";
+
+    const notification = new Notification(`${event.title} starting soon`, {
+      body: `Starts in ${minutesLabel} at ${timeStr}`,
+      icon: "/calendar-icon.png",
+      tag: reminder.id,
+      requireInteraction: true,
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+  };
+
+  const checkAndSendReminders = useCallback(() => {
+    const now = Date.now();
+
+    activeReminders.forEach((reminder) => {
+      if (reminder.sent) return;
+
+      const event = events.find((e) => e.id === reminder.eventId);
+      if (!event || !event.startTime) return;
+
+      const reminderTime = event.startTime - reminder.minutesBefore * 60 * 1000;
+      const timeDiff = reminderTime - now;
+
+      if (timeDiff <= 0 && timeDiff > -60000) {
+        sendNotification(event, reminder);
+        updateReminderStatus(reminder.id, { sent: true });
+      }
+    });
+  }, [events, activeReminders, sendNotification, updateReminderStatus]);
+
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPermission(Notification.permission);
     }
   }, []);
@@ -49,52 +101,13 @@ export function NotificationCenter({
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [events, activeReminders]);
+  }, [events, activeReminders, checkAndSendReminders]);
 
   const requestPermission = async () => {
     if (typeof window !== "undefined" && "Notification" in window) {
       const result = await Notification.requestPermission();
       setPermission(result);
     }
-  };
-
-  const checkAndSendReminders = useCallback(() => {
-    const now = Date.now();
-
-    activeReminders.forEach((reminder) => {
-      if (reminder.sent) return;
-
-      const event = events.find((e) => e._id === reminder.eventId);
-      if (!event) return;
-
-      const reminderTime = event.startTime - reminder.minutesBefore * 60 * 1000;
-      const timeDiff = reminderTime - now;
-
-      if (timeDiff <= 0 && timeDiff > -60000) {
-        sendNotification(event, reminder);
-        updateReminderStatus(reminder.id, { sent: true });
-      }
-    });
-  }, [events, activeReminders]);
-
-  const sendNotification = (event: EventData, reminder: Reminder) => {
-    if (permission !== "granted") return;
-
-    const minutesLabel = reminder.minutesBefore >= 60
-      ? `${reminder.minutesBefore / 60} hour${reminder.minutesBefore >= 120 ? "s" : ""}`
-      : `${reminder.minutesBefore} minute${reminder.minutesBefore !== 1 ? "s" : ""}`;
-
-    const notification = new Notification(`${event.title} starting soon`, {
-      body: `Starts in ${minutesLabel} at ${format(new Date(event.startTime), "h:mm a")}`,
-      icon: "/calendar-icon.png",
-      tag: reminder.id,
-      requireInteraction: true,
-    });
-
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
   };
 
   const addReminder = (eventId: string, minutes: number) => {
@@ -113,14 +126,6 @@ export function NotificationCenter({
 
   const removeReminder = (reminderId: string) => {
     const updated = activeReminders.filter((r) => r.id !== reminderId);
-    setActiveReminders(updated);
-    onReminderChange(updated);
-  };
-
-  const updateReminderStatus = (reminderId: string, updates: Partial<Reminder>) => {
-    const updated = activeReminders.map((r) =>
-      r.id === reminderId ? { ...r, ...updates } : r
-    );
     setActiveReminders(updated);
     onReminderChange(updated);
   };
@@ -190,10 +195,10 @@ export function NotificationCenter({
           </p>
           
           {events.slice(0, 5).filter(Boolean).map((event) => {
-            if (!event._id) return null;
-            const eventReminders = getRemindersForEvent(event._id);
+            if (!event.id) return null;
+            const eventReminders = getRemindersForEvent(event.id);
             return (
-              <div key={event._id} className="space-y-2">
+              <div key={event.id} className="space-y-2">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
                   {event.title}
                 </div>
@@ -212,9 +217,9 @@ export function NotificationCenter({
                                   (r) => r.minutesBefore === preset.minutes
                                 )!.id
                               )
-                            : addReminder(event._id!, preset.minutes)
+                            : addReminder(event.id!, preset.minutes)
                         }
-                        disabled={new Date(event.startTime).getTime() < Date.now()}
+                        disabled={!event.startTime || new Date(event.startTime).getTime() < Date.now()}
                         className={`
                           px-2 py-1 text-xs rounded-full transition-colors
                           ${hasReminder
@@ -238,7 +243,7 @@ export function NotificationCenter({
   );
 }
 
-export function useEventReminders(event: EventData) {
+export function useEventReminders(event: CalendarEvent) {
   const [reminderMinutes, setReminderMinutes] = useState<number[]>([]);
 
   const addReminder = (minutes: number) => {
@@ -252,8 +257,10 @@ export function useEventReminders(event: EventData) {
   };
 
   const isUpcoming = (): boolean => {
+    if (!event.startTime) return false;
     const now = Date.now();
     const eventStart = new Date(event.startTime).getTime();
+    if (isNaN(eventStart)) return false;
     const minutesUntilEvent = differenceInMinutes(eventStart, now);
     
     const nextReminder = reminderMinutes.sort((a, b) => b - a)[0];
@@ -268,7 +275,7 @@ export function useEventReminders(event: EventData) {
   };
 }
 
-export function NotificationToast({ event, onClose }: { event: EventData; onClose: () => void }) {
+export function NotificationToast({ event, onClose }: { event: CalendarEvent; onClose: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 5000);
     return () => clearTimeout(timer);
@@ -291,7 +298,9 @@ export function NotificationToast({ event, onClose }: { event: EventData; onClos
               {event.title}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Starting at {format(new Date(event.startTime), "h:mm a")}
+              Starting at {event.startTime && !isNaN(new Date(event.startTime).getTime()) 
+                ? format(new Date(event.startTime), "h:mm a") 
+                : "TBD"}
             </p>
           </div>
           <button

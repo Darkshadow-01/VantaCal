@@ -352,11 +352,11 @@ export function expandRecurringEvents(
     const duration = event.endTime - event.startTime;
     events.push({
       ...event,
-      _id: `${event._id}-${date.getTime()}`,
+      _id: `${event.id}-${date.getTime()}`,
       startTime: date.getTime(),
       endTime: date.getTime() + duration,
       isRecurrenceInstance: true,
-      recurrenceId: event._id,
+      recurrenceId: event.id,
     });
   });
 

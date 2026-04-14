@@ -33,26 +33,26 @@ function getSystemColorClass(system?: string) {
     case "Health":
       return {
         bg: "bg-[#16A34A]",
-        bgLight: "bg-[#DCFCE7]",
-        text: "text-[#16A34A]",
+        bgLight: "bg-[#DCFCE7] dark:bg-[#16A34A]/20",
+        text: "text-[#16A34A] dark:text-[#4ADE80]",
       };
     case "Work":
       return {
         bg: "bg-[#2563EB]",
-        bgLight: "bg-[#DBEAFE]",
-        text: "text-[#2563EB]",
+        bgLight: "bg-[#DBEAFE] dark:bg-[#2563EB]/20",
+        text: "text-[#2563EB] dark:text-[#60A5FA]",
       };
     case "Relationships":
       return {
         bg: "bg-[#9333EA]",
-        bgLight: "bg-[#F3E8FF]",
-        text: "text-[#9333EA]",
+        bgLight: "bg-[#F3E8FF] dark:bg-[#9333EA]/20",
+        text: "text-[#9333EA] dark:text-[#C084FC]",
       };
     default:
       return {
         bg: "bg-[#57534E]",
-        bgLight: "bg-[#F5F5F4]",
-        text: "text-[#57534E]",
+        bgLight: "bg-[#F5F5F4] dark:bg-[#57534E]/20",
+        text: "text-[#57534E] dark:text-[#A8A29E]",
       };
   }
 }

@@ -57,7 +57,7 @@ function DraggableEvent({ event, systemColors, onClick }: {
     >
       <EventBlock 
         event={event} 
-        systemColors={systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50", border: "border-blue-500", text: "text-blue-700", hover: "hover:bg-blue-50" }}
+        systemColors={systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50 dark:bg-blue-500/20", border: "border-blue-500", text: "text-blue-700 dark:text-blue-400", hover: "hover:bg-blue-50 dark:hover:bg-blue-500/30" }}
         onClick={(e: React.MouseEvent) => onClick?.(e)}
         style={{ top: "0px", height: `${height}px` }}
       />
@@ -251,7 +251,7 @@ export function DayView({
           <div className="w-32">
             <EventBlock 
               event={activeEvent} 
-              systemColors={systemColors[activeEvent.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50", border: "border-blue-500", text: "text-blue-700", hover: "hover:bg-blue-50" }}
+              systemColors={systemColors[activeEvent.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50 dark:bg-blue-500/20", border: "border-blue-500", text: "text-blue-700 dark:text-blue-400", hover: "hover:bg-blue-50 dark:hover:bg-blue-500/30" }}
               style={{ top: "0px", height: "60px" }}
               onClick={() => {}}
             />

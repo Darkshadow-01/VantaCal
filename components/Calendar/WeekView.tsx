@@ -253,7 +253,7 @@ export function WeekView({
                     const eventWidth = usableWidth / colInfo.totalColumns;
                     const leftPos = colInfo.column * (eventWidth + gap);
                     
-                    const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-[var(--accent)]", bgLight: "bg-[var(--bg-secondary)]", border: "border-[var(--accent)]", text: "text-[var(--text-primary)]", hover: "hover:bg-[var(--bg-secondary)]" };
+                    const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-[var(--accent)]", bgLight: "bg-[var(--bg-secondary)] dark:bg-[var(--accent)]/20", border: "border-[var(--accent)]", text: "text-[var(--text-primary)] dark:text-[var(--accent)]", hover: "hover:bg-[var(--bg-secondary)] dark:hover:bg-[var(--accent)]/30" };
 
                     return (
                       <div

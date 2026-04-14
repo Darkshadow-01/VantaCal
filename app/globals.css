@@ -4,9 +4,38 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Modern Sleek Color Palette */
-  /* Galaxy Black: #2B262C, Wishful White: #F5F1E8, Grey Accents: #A8A8A8 - #D4D4D4 */
+  /* Light Mode - Warm Monochrome (Stone) */
+  --bg-primary: #FAFAF9;
+  --bg-secondary: #F5F5F4;
+  --bg-elevated: #FFFFFF;
   
+  --text-primary: #1C1917;
+  --text-secondary: #57534E;
+  --text-muted: #A8A29E;
+  
+  --accent: #1C1917;
+  --accent-contrast: #FFFFFF;
+  
+  --border: #E7E5E4;
+  --border-subtle: #F5F5F4;
+  
+  /* System Colors */
+  --system-health: #16A34A;
+  --system-health-light: #DCFCE7;
+  --system-work: #2563EB;
+  --system-work-light: #DBEAFE;
+  --system-relationships: #9333EA;
+  --system-relationships-light: #F3E8FF;
+  
+  /* Semantic */
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --success: #16A34A;
+  --success-light: #DCFCE7;
+  
+  /* UI Elements */
   --card: 36 28% 97%;
   --card-foreground: 30 6% 17%;
   --popover: 36 28% 97%;
@@ -17,26 +46,14 @@
   --secondary-foreground: 30 6% 17%;
   --muted: 0 0% 66%;
   --muted-foreground: 0 0% 40%;
-  --accent: 0 0% 66%;
-  --accent-foreground: 30 6% 17%;
+  --accent-legacy: 0 0% 66%;
+  --accent-legacy-foreground: 30 6% 17%;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: 210 40% 98%;
-  --border: 0 0% 85%;
-  --input: 0 0% 85%;
   --ring: 30 6% 17%;
   --radius: 0.625rem;
-
-  /* System Colors */
-  --health: 142 76% 36%;
-  --work: 217 91% 60%;
-  --relationships: 262 83% 58%;
-  --background: 36 28% 97%;
-  --foreground: 30 6% 17%;
-  --chart-1: 0 0% 20%;
-  --chart-2: 0 0% 40%;
-  --chart-3: 0 0% 60%;
-  --chart-4: 0 0% 70%;
-  --chart-5: 0 0% 80%;
+  
+  /* Sidebar */
   --sidebar: 36 28% 97%;
   --sidebar-foreground: 30 6% 17%;
   --sidebar-primary: 30 6% 17%;
@@ -45,42 +62,72 @@
   --sidebar-accent-foreground: 30 6% 17%;
   --sidebar-border: 0 0% 85%;
   --sidebar-ring: 30 6% 17%;
+  
+  /* Chart */
+  --chart-1: 0 0% 20%;
+  --chart-2: 0 0% 40%;
+  --chart-3: 0 0% 60%;
+  --chart-4: 0 0% 70%;
+  --chart-5: 0 0% 80%;
 }
 
 .dark {
-  /* Dark mode: Galaxy Black background with Wishful White text */
-  --background: 30 6% 17%;
-  --foreground: 36 28% 97%;
+  /* Dark Mode - True Luxury */
+  --bg-primary: #0C0A09;
+  --bg-secondary: #1C1917;
+  --bg-elevated: #292524;
+  
+  --text-primary: #FAFAF9;
+  --text-secondary: #A8A29E;
+  --text-muted: #78716C;
+  
+  --accent: #FAFAF9;
+  --accent-contrast: #0C0A09;
+  
+  --border: #292524;
+  --border-subtle: #1C1917;
+  
+  /* Semantic */
+  --danger: #F87171;
+  --danger-light: #7F1D1D;
+  --warning: #FBBF24;
+  --warning-light: #78350F;
+  --success: #4ADE80;
+  --success-light: #14532D;
+  
+  /* UI Elements */
   --card: 30 10% 22%;
   --card-foreground: 36 28% 97%;
   --popover: 30 10% 22%;
   --popover-foreground: 36 28% 97%;
-  --primary: 0 0% 85%;
+  --primary: 36 28% 97%;
   --primary-foreground: 30 6% 17%;
   --secondary: 30 10% 22%;
   --secondary-foreground: 36 28% 97%;
   --muted: 0 0% 40%;
   --muted-foreground: 0 0% 66%;
-  --accent: 30 10% 22%;
-  --accent-foreground: 36 28% 97%;
+  --accent-legacy: 30 10% 22%;
+  --accent-legacy-foreground: 36 28% 97%;
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: 210 40% 98%;
-  --border: 0 0% 20%;
-  --input: 0 0% 25%;
   --ring: 0 0% 85%;
-  --chart-1: 0 0% 85%;
-  --chart-2: 0 0% 65%;
-  --chart-3: 0 0% 45%;
-  --chart-4: 0 0% 30%;
-  --chart-5: 0 0% 20%;
+  
+  /* Sidebar */
   --sidebar: 30 6% 17%;
   --sidebar-foreground: 36 28% 97%;
-  --sidebar-primary: 0 0% 85%;
+  --sidebar-primary: 36 28% 97%;
   --sidebar-primary-foreground: 30 6% 17%;
   --sidebar-accent: 30 10% 22%;
   --sidebar-accent-foreground: 36 28% 97%;
   --sidebar-border: 0 0% 20%;
   --sidebar-ring: 0 0% 85%;
+  
+  /* Chart */
+  --chart-1: 0 0% 85%;
+  --chart-2: 0 0% 65%;
+  --chart-3: 0 0% 45%;
+  --chart-4: 0 0% 30%;
+  --chart-5: 0 0% 20%;
 }
 
 @theme inline {
@@ -96,8 +143,8 @@
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent: hsl(var(--accent-legacy));
+  --color-accent-foreground: hsl(var(--accent-legacy-foreground));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-border: hsl(var(--border));
@@ -107,8 +154,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-serif);
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -132,9 +180,9 @@
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
 @layer base {
@@ -147,4 +195,302 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* ========================
+   TYPOGRAPHY UTILITIES
+   ======================== */
+
+.font-serif {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.font-sans {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}
+
+/* ========================
+   GLASS MORPHISM
+   ======================== */
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass {
+  background: rgba(28, 25, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass-light {
+  background: rgba(28, 25, 23, 0.6);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-subtle {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ========================
+   ANIMATIONS
+   ======================== */
+
+/* View Transitions - Liquid Feel */
+@keyframes viewFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes viewFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes glassReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+    backdrop-filter: blur(0px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.98) translateY(2px);
+    backdrop-filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    backdrop-filter: blur(0px);
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.dark .glow {
+  animation: glowDark 2s ease-in-out infinite;
+}
+
+@keyframes glowDark {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Animation Classes */
+.animate-view-enter {
+  animation: viewFadeIn 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-view-exit {
+  animation: viewFadeOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-glass-reveal {
+  animation: glassReveal 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 250ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 250ms ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 250ms ease-out forwards;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.stagger-1 { animation-delay: 30ms; }
+.stagger-2 { animation-delay: 60ms; }
+.stagger-3 { animation-delay: 90ms; }
+.stagger-4 { animation-delay: 120ms; }
+.stagger-5 { animation-delay: 150ms; }
+
+/* ========================
+   INTERACTIVE STATES
+   ======================== */
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+}
+
+.hover-lift:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Press effect */
+.press-scale {
+  transition: transform 100ms ease-in;
+}
+
+.press-scale:active {
+  transform: scale(0.97);
+}
+
+/* Focus visible ring */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ========================
+   REDUCED MOTION
+   ======================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .animate-view-enter,
+  .animate-view-exit,
+  .animate-glass-reveal,
+  .animate-scale-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ========================
+   SCROLLBAR
+   ======================== */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ========================
+   UTILITY CLASSES
+   ======================== */
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

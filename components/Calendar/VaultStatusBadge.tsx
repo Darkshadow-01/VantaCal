@@ -73,7 +73,11 @@ export function VaultStatusBadge({ className, showDescription = false, onClick }
   );
 }
 
-export function VaultWarningBanner() {
+interface VaultWarningBannerProps {
+  onSetupClick?: () => void;
+}
+
+export function VaultWarningBanner({ onSetupClick }: VaultWarningBannerProps) {
   const { vaultState, isLoading } = useVaultState();
 
   if (isLoading || vaultState !== "NO_KEY") {
@@ -94,13 +98,23 @@ export function VaultWarningBanner() {
   })();
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 dark:bg-red-500/20 border-b border-red-500/30 text-red-600 dark:text-red-400 text-sm">
-      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-      <span>
-        {tempEventsCount > 0 
-          ? `Temporary mode — ${tempEventsCount} event(s) will be lost when browser closes. Set up vault now!`
-          : "Temporary mode — events will be lost when browser closes. Set up vault to save securely."}
-      </span>
+    <div className="flex items-center justify-between gap-2 px-3 py-2 bg-red-500/10 dark:bg-red-500/20 border-b border-red-500/30 text-red-600 dark:text-red-400 text-sm">
+      <div className="flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+        <span>
+          {tempEventsCount > 0 
+            ? `Temporary mode — ${tempEventsCount} event(s) will be lost when browser closes.`
+            : "Temporary mode — events will be lost when browser closes."}
+        </span>
+      </div>
+      {onSetupClick && (
+        <button
+          onClick={onSetupClick}
+          className="px-3 py-1 text-xs font-medium bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+        >
+          Set up vault
+        </button>
+      )}
     </div>
   );
 }

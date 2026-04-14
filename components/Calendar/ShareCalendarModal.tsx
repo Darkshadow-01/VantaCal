@@ -109,7 +109,7 @@ export function ShareCalendarModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter email address"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-[#5B8DEF]"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-stone-500"
                 />
               </div>
             </div>
@@ -117,7 +117,7 @@ export function ShareCalendarModal({
               <select
                 value={permission}
                 onChange={(e) => setPermission(e.target.value as "view" | "edit")}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white outline-none focus:border-[#5B8DEF]"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white outline-none focus:border-stone-500"
               >
                 <option value="view">Can view</option>
                 <option value="edit">Can edit</option>

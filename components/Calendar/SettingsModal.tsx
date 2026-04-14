@@ -25,23 +25,27 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-[#1A1D24] rounded-xl w-full max-w-2xl border border-gray-200 dark:border-[#333] shadow-2xl max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="flex border-b border-gray-200 dark:border-[#333]">
+      <div className="bg-[var(--bg-elevated)] rounded-xl w-full max-w-2xl border border-[var(--border)] shadow-2xl max-h-[80vh] overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+        {/* Tab bar - Refined with underline */}
+        <div className="flex border-b border-[var(--border)]">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`px-5 py-3 text-sm transition-all relative ${
                 activeTab === tab.id
-                  ? "text-gray-900 dark:text-white border-b-2 border-[#5B8DEF] bg-gray-100 dark:bg-[#252830]"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  ? "text-[var(--text-primary)]"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover-lift"
               }`}
             >
               {tab.label}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-[var(--accent)] rounded-full" />
+              )}
             </button>
           ))}
-          <button onClick={onClose} className="ml-auto p-4 hover:bg-gray-100 dark:hover:bg-[#252830] rounded">
-            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <button onClick={onClose} className="ml-auto p-3 hover:bg-[var(--bg-secondary)] rounded-lg hover-lift press-scale">
+            <X className="w-5 h-5 text-[var(--text-muted)]" />
           </button>
         </div>
 
@@ -49,7 +53,7 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
           {activeTab === "calendar" && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400">Time Zone</label>
+                <label className="text-sm text-[var(--text-secondary)]">Time Zone</label>
                 <TimezoneSelect 
                   value={settings.timezone} 
                   onChange={(tz) => onUpdateSetting("timezone", tz)}
@@ -57,11 +61,11 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400">Default View</label>
+                <label className="text-sm text-[var(--text-secondary)]">Default View</label>
                 <select 
                   value={settings.defaultView} 
                   onChange={(e) => onUpdateSetting("defaultView", e.target.value as any)}
-                  className="w-full bg-white dark:bg-[#252830] border border-gray-300 dark:border-[#333] rounded-lg px-3 py-2 text-gray-900 dark:text-white"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)]"
                 >
                   <option value="day">Day</option>
                   <option value="week">Week</option>
@@ -71,87 +75,88 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400">Start Week On</label>
+                <label className="text-sm text-[var(--text-secondary)]">Start Week On</label>
                 <select 
                   value={settings.startWeekOn} 
                   onChange={(e) => onUpdateSetting("startWeekOn", e.target.value as any)}
-                  className="w-full bg-white dark:bg-[#252830] border border-gray-300 dark:border-[#333] rounded-lg px-3 py-2 text-gray-900 dark:text-white"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)]"
                 >
                   <option value="sunday">Sunday</option>
                   <option value="monday">Monday</option>
                 </select>
               </div>
 
+              {/* Toggle - Monochrome */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-900 dark:text-white">Show Weekends</p>
-                  <p className="text-xs text-gray-500">Display Saturday and Sunday in views</p>
+                  <p className="text-sm text-[var(--text-primary)]">Show Weekends</p>
+                  <p className="text-xs text-[var(--text-muted)]">Display Saturday and Sunday in views</p>
                 </div>
                 <button
                   onClick={() => onUpdateSetting("showWeekends", !settings.showWeekends)}
-                  className={`w-12 h-6 rounded-full transition-colors ${settings.showWeekends ? "bg-[#5B8DEF]" : "bg-gray-300 dark:bg-gray-600"}`}
+                  className={`w-11 h-6 rounded-full transition-all hover-lift press-scale ${settings.showWeekends ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${settings.showWeekends ? "translate-x-6" : "translate-x-0.5"}`} />
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${settings.showWeekends ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400">Working Hours</label>
+                <label className="text-sm text-[var(--text-secondary)]">Working Hours</label>
                 <div className="flex items-center gap-4">
                   <select
                     value={settings.workingHours?.start ?? 9}
                     onChange={(e) => onUpdateSetting("workingHours", { ...settings.workingHours, start: parseInt(e.target.value) })}
-                    className="bg-white dark:bg-[#252830] border border-gray-300 dark:border-[#333] rounded-lg px-3 py-2 text-gray-900 dark:text-white"
+                    className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)] font-mono"
                   >
                     {Array.from({ length: 24 }, (_, i) => (
                       <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
                     ))}
                   </select>
-                  <span className="text-gray-500">to</span>
+                  <span className="text-[var(--text-muted)]">to</span>
                   <select
                     value={settings.workingHours?.end ?? 17}
                     onChange={(e) => onUpdateSetting("workingHours", { ...settings.workingHours, end: parseInt(e.target.value) })}
-                    className="bg-white dark:bg-[#252830] border border-gray-300 dark:border-[#333] rounded-lg px-3 py-2 text-gray-900 dark:text-white"
+                    className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)] font-mono"
                   >
                     {Array.from({ length: 24 }, (_, i) => (
                       <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
                     ))}
                   </select>
                 </div>
-                <p className="text-xs text-gray-500">Events outside working hours may be shown differently</p>
+                <p className="text-xs text-[var(--text-muted)]">Events outside working hours may be shown differently</p>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-900 dark:text-white">Focus Time</p>
-                  <p className="text-xs text-gray-500">Block time for deep work (declines meetings)</p>
+                  <p className="text-sm text-[var(--text-primary)]">Focus Time</p>
+                  <p className="text-xs text-[var(--text-muted)]">Block time for deep work (declines meetings)</p>
                 </div>
                 <button
                   onClick={() => onUpdateSetting("focusTimeEnabled", !settings.focusTimeEnabled)}
-                  className={`w-12 h-6 rounded-full transition-colors ${settings.focusTimeEnabled ? "bg-[#5B8DEF]" : "bg-gray-300 dark:bg-gray-600"}`}
+                  className={`w-11 h-6 rounded-full transition-all hover-lift press-scale ${settings.focusTimeEnabled ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${settings.focusTimeEnabled ? "translate-x-6" : "translate-x-0.5"}`} />
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${settings.focusTimeEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
               </div>
 
               {settings.focusTimeEnabled && (
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-600 dark:text-gray-400">Focus Hours</label>
+                  <label className="text-sm text-[var(--text-secondary)]">Focus Hours</label>
                   <div className="flex items-center gap-4">
                     <select
                       value={settings.focusTimeStart ?? 9}
                       onChange={(e) => onUpdateSetting("focusTimeStart", parseInt(e.target.value))}
-                      className="bg-white dark:bg-[#252830] border border-gray-300 dark:border-[#333] rounded-lg px-3 py-2 text-gray-900 dark:text-white"
+                      className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)] font-mono"
                     >
                       {Array.from({ length: 24 }, (_, i) => (
                         <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
                       ))}
                     </select>
-                    <span className="text-gray-500">to</span>
+                    <span className="text-[var(--text-muted)]">to</span>
                     <select
                       value={settings.focusTimeEnd ?? 17}
                       onChange={(e) => onUpdateSetting("focusTimeEnd", parseInt(e.target.value))}
-                      className="bg-white dark:bg-[#252830] border border-gray-300 dark:border-[#333] rounded-lg px-3 py-2 text-gray-900 dark:text-white"
+                      className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)] font-mono"
                     >
                       {Array.from({ length: 24 }, (_, i) => (
                         <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
@@ -167,41 +172,27 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-900 dark:text-white">Dark Mode</p>
-                  <p className="text-xs text-gray-500">Use dark theme</p>
+                  <p className="text-sm text-[var(--text-primary)]">Dark Mode</p>
+                  <p className="text-xs text-[var(--text-muted)]">Use dark theme</p>
                 </div>
                 <button
                   onClick={() => onUpdateSetting("darkMode", !settings.darkMode)}
-                  className={`w-12 h-6 rounded-full transition-colors ${settings.darkMode ? "bg-[#5B8DEF]" : "bg-gray-300 dark:bg-gray-600"}`}
+                  className={`w-11 h-6 rounded-full transition-all hover-lift press-scale ${settings.darkMode ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${settings.darkMode ? "translate-x-6" : "translate-x-0.5"}`} />
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${settings.darkMode ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400">Theme Color</label>
-                <div className="flex gap-2">
-                  {["#5B8DEF", "#8B5CF6", "#F59E0B", "#EF4444", "#EC4899", "#3BA55D"].map(color => (
-                    <button
-                      key={color}
-                      onClick={() => onUpdateSetting("themeColor", color)}
-                      className={`w-8 h-8 rounded-full transition-transform ${settings.themeColor === color ? "scale-110 ring-2 ring-white dark:ring-offset-2 dark:ring-offset-[#121417]" : "hover:scale-105"}`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-900 dark:text-white">Compact View</p>
-                  <p className="text-xs text-gray-500">Show more events with less spacing</p>
+                  <p className="text-sm text-[var(--text-primary)]">Compact View</p>
+                  <p className="text-xs text-[var(--text-muted)]">Show more events with less spacing</p>
                 </div>
                 <button
                   onClick={() => onUpdateSetting("compactView", !settings.compactView)}
-                  className={`w-12 h-6 rounded-full transition-colors ${settings.compactView ? "bg-[#5B8DEF]" : "bg-gray-300 dark:bg-gray-600"}`}
+                  className={`w-11 h-6 rounded-full transition-all hover-lift press-scale ${settings.compactView ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${settings.compactView ? "translate-x-6" : "translate-x-0.5"}`} />
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${settings.compactView ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
               </div>
             </div>
@@ -211,36 +202,36 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-900 dark:text-white">Push Notifications</p>
-                  <p className="text-xs text-gray-500">Receive browser notifications for events</p>
+                  <p className="text-sm text-[var(--text-primary)]">Push Notifications</p>
+                  <p className="text-xs text-[var(--text-muted)]">Receive browser notifications for events</p>
                 </div>
                 <button
                   onClick={() => onUpdateSetting("pushNotifications", !settings.pushNotifications)}
-                  className={`w-12 h-6 rounded-full transition-colors ${settings.pushNotifications ? "bg-[#5B8DEF]" : "bg-gray-300 dark:bg-gray-600"}`}
+                  className={`w-11 h-6 rounded-full transition-all hover-lift press-scale ${settings.pushNotifications ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${settings.pushNotifications ? "translate-x-6" : "translate-x-0.5"}`} />
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${settings.pushNotifications ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-900 dark:text-white">Email Notifications</p>
-                  <p className="text-xs text-gray-500">Receive email reminders for events</p>
+                  <p className="text-sm text-[var(--text-primary)]">Email Notifications</p>
+                  <p className="text-xs text-[var(--text-muted)]">Receive email reminders for events</p>
                 </div>
                 <button
                   onClick={() => onUpdateSetting("emailNotifications", !settings.emailNotifications)}
-                  className={`w-12 h-6 rounded-full transition-colors ${settings.emailNotifications ? "bg-[#5B8DEF]" : "bg-gray-300 dark:bg-gray-600"}`}
+                  className={`w-11 h-6 rounded-full transition-all hover-lift press-scale ${settings.emailNotifications ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${settings.emailNotifications ? "translate-x-6" : "translate-x-0.5"}`} />
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${settings.emailNotifications ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400">Default Reminder</label>
+                <label className="text-sm text-[var(--text-secondary)]">Default Reminder</label>
                 <select 
                   value={settings.defaultReminder} 
                   onChange={(e) => onUpdateSetting("defaultReminder", e.target.value)}
-                  className="w-full bg-white dark:bg-[#252830] border border-gray-300 dark:border-[#333] rounded-lg px-3 py-2 text-gray-900 dark:text-white"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)]"
                 >
                   <option value="0">At time of event</option>
                   <option value="5">5 minutes before</option>

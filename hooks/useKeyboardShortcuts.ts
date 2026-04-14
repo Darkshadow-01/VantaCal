@@ -94,6 +94,9 @@ export function useKeyboardShortcuts({
         e.preventDefault();
         // Could show help modal
         break;
+      case "Escape":
+        // Global escape - could close modals
+        break;
     }
   }, [onCreateEvent, onToggleSearch, onGoToToday, onNext, onPrev, onDayView, onWeekView, onMonthView, onYearView]);
 
@@ -113,4 +116,5 @@ export const KEYBOARD_SHORTCUTS = [
   { key: "Y", action: "Switch to year view" },
   { key: "Ctrl+F / Cmd+F", action: "Search" },
   { key: "?", action: "Show keyboard shortcuts" },
+  { key: "Esc", action: "Close modal / Cancel" },
 ];

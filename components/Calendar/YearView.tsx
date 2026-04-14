@@ -50,20 +50,20 @@ function MiniMonthView({ month, events, systemColors, onDateClick }: {
   return (
     <div 
       className={cn(
-        "bg-white dark:bg-[#1A1D24] rounded-xl border border-gray-100 dark:border-[#333] overflow-hidden hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-200 cursor-pointer h-full",
-        isCurrentMonth && "ring-2 ring-blue-500/50"
+        "bg-[var(--bg-primary)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-lg hover:border-[var(--accent)]/30 transition-all duration-200 cursor-pointer h-full",
+        isCurrentMonth && "ring-2 ring-[var(--accent)]/50"
       )}
       onClick={() => onDateClick?.(month)}
     >
       <div className={cn(
-        "py-2 px-3 text-center text-xs font-semibold border-b border-gray-100 dark:border-[#333]",
-        isCurrentMonth ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+        "py-2 px-3 text-center text-xs font-semibold border-b border-[var(--border)]",
+        isCurrentMonth ? "bg-[var(--accent)]/10 text-[var(--accent)]" : "text-[var(--text-secondary)]"
       )}>
         {format(month, "MMM")}
       </div>
       <div className="grid grid-cols-7 gap-px p-2">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <div key={i} className="text-[9px] text-center text-gray-400 dark:text-gray-500 font-medium">{d}</div>
+          <div key={i} className="text-[9px] text-center text-[var(--text-muted)] font-medium">{d}</div>
         ))}
         {emptyDays.map((_, i) => (
           <div key={`empty-${i}`} className="h-5" />
@@ -80,10 +80,10 @@ function MiniMonthView({ month, events, systemColors, onDateClick }: {
               className={cn(
                 "h-5 text-xs flex items-center justify-center transition-all duration-150",
                 isTodayDay 
-                  ? "bg-blue-500 text-white font-semibold rounded-full w-5 h-5 mx-auto" 
+                  ? "bg-[var(--accent)] text-[var(--accent-contrast)] font-semibold rounded-full w-5 h-5 mx-auto" 
                   : isEventDay 
-                    ? "text-blue-600 dark:text-blue-400 font-medium" 
-                    : "text-gray-700 dark:text-gray-300"
+                    ? "text-[var(--accent)] font-medium" 
+                    : "text-[var(--text-primary)]"
               )}
               onClick={(e) => { e.stopPropagation(); onDateClick?.(day); }}
             >
@@ -92,7 +92,7 @@ function MiniMonthView({ month, events, systemColors, onDateClick }: {
                   {dayEvents.slice(0, 2).map((event, idx) => (
                     <div 
                       key={idx} 
-                      className={cn("w-1 h-1 rounded-full", systemColors[event.system as keyof typeof systemColors]?.bg || "bg-blue-500")}
+                      className={cn("w-1 h-1 rounded-full", systemColors[event.system as keyof typeof systemColors]?.bg || "bg-[var(--accent)]")}
                     />
                   ))}
                 </div>
@@ -107,7 +107,11 @@ function MiniMonthView({ month, events, systemColors, onDateClick }: {
   );
 }
 
-export function YearView({ date, events, systemColors, onDateClick }: YearlyViewProps) {
+interface YearViewProps extends YearlyViewProps {
+  onYearChange?: (year: number) => void;
+}
+
+export function YearView({ date, events, systemColors, onDateClick, onYearChange }: YearViewProps) {
   const year = date.getFullYear();
   
   const months = useMemo(() => {
@@ -116,24 +120,42 @@ export function YearView({ date, events, systemColors, onDateClick }: YearlyView
     return eachMonthOfInterval({ start: yearStart, end: yearEnd });
   }, [date]);
 
+  const handlePrevYear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onYearChange) {
+      onYearChange(year - 1);
+    } else {
+      onDateClick?.(new Date(year - 1, 0, 1));
+    }
+  };
+
+  const handleNextYear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onYearChange) {
+      onYearChange(year + 1);
+    } else {
+      onDateClick?.(new Date(year + 1, 0, 1));
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-[#1A1D24] p-4">
+    <div className="h-full flex flex-col bg-[var(--bg-primary)] p-4">
       {/* Year header */}
       <div className="flex items-center justify-between mb-4 px-2 flex-shrink-0">
         <button 
-          onClick={() => onDateClick?.(new Date(year - 1, 0, 1))}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
+          onClick={handlePrevYear}
+          className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all press-scale"
         >
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{year}</h2>
+        <h2 className="text-2xl font-serif text-[var(--text-primary)]">{year}</h2>
         <button 
-          onClick={() => onDateClick?.(new Date(year + 1, 0, 1))}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
+          onClick={handleNextYear}
+          className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all press-scale"
         >
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>

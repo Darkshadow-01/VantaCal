@@ -9,12 +9,9 @@ import {
   startOfWeek,
   eachDayOfInterval,
   isSameMonth,
-  isSameDay,
   isToday,
-  addDays,
 } from "date-fns";
 import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable, DragStartEvent } from "@dnd-kit/core";
-import { Clock } from "lucide-react";
 import type { CalendarEvent } from "@/lib/types";
 import type { BufferBlock } from "@/lib/schedulerWithBuffers";
 import { cn } from "@/lib/utils";
@@ -31,15 +28,45 @@ interface MonthlyViewProps {
   onEventSelect?: (event: CalendarEvent) => void;
 }
 
-function DraggableEventDot({ event, systemColors, onClick }: {
+function getSystemColorClass(system?: string) {
+  switch (system) {
+    case "Health":
+      return {
+        bg: "bg-[#16A34A]",
+        bgLight: "bg-[#DCFCE7]",
+        text: "text-[#16A34A]",
+      };
+    case "Work":
+      return {
+        bg: "bg-[#2563EB]",
+        bgLight: "bg-[#DBEAFE]",
+        text: "text-[#2563EB]",
+      };
+    case "Relationships":
+      return {
+        bg: "bg-[#9333EA]",
+        bgLight: "bg-[#F3E8FF]",
+        text: "text-[#9333EA]",
+      };
+    default:
+      return {
+        bg: "bg-[#57534E]",
+        bgLight: "bg-[#F5F5F4]",
+        text: "text-[#57534E]",
+      };
+  }
+}
+
+function DraggableEventDot({ event, onClick }: {
   event: CalendarEvent;
-  systemColors: Record<string, any>;
   onClick?: (e: React.MouseEvent) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: event.id,
     data: event,
   });
+
+  const colors = getSystemColorClass(event.system);
 
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -53,7 +80,7 @@ function DraggableEventDot({ event, systemColors, onClick }: {
       style={style}
       {...listeners}
       {...attributes}
-      className={`w-2 h-2 rounded-full cursor-grab ${systemColors[event.system as keyof typeof systemColors]?.bg || "bg-gray-500"}`}
+      className={cn("w-2 h-2 rounded-full cursor-grab", colors.bg)}
       title={event.title}
       onClick={(e) => { e.stopPropagation(); onClick?.(e); }}
     />
@@ -71,15 +98,19 @@ function DroppableDay({ day, isCurrentMonthDay, onClick, children }: {
     data: day,
   });
 
+  const dayOfWeek = day.getDay();
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
   return (
     <div
       ref={setNodeRef}
-      className={`
-        bg-white dark:bg-[#1A1D24] flex flex-col p-0.5 transition-colors cursor-pointer border-r border-b border-gray-100 dark:border-[#333]
-        ${!isCurrentMonthDay ? "bg-gray-50/50 dark:bg-[#252830]/50" : ""}
-        ${isOver && isCurrentMonthDay ? "bg-blue-50/50 dark:bg-blue-900/20" : ""}
-        hover:bg-gray-50 dark:hover:bg-[#252830]/50
-      `}
+      className={cn(
+        "flex flex-col p-0.5 transition-all cursor-pointer border-r border-b border-[var(--border)]",
+        !isCurrentMonthDay && "opacity-40 bg-[var(--bg-secondary)]/30",
+        isCurrentMonthDay && isOver && "bg-[var(--bg-secondary)]",
+        isCurrentMonthDay && !isOver && "hover:bg-[var(--bg-secondary)]/50",
+        isWeekend && isCurrentMonthDay && "bg-[var(--bg-secondary)]/20"
+      )}
       onClick={() => isCurrentMonthDay && onClick?.()}
     >
       {children}
@@ -93,7 +124,6 @@ const DayCell = memo(function DayCell({
   dayBuffers,
   isCurrentDay,
   isCurrentMonthDay,
-  systemColors,
   onDateClick,
   onEventClick,
 }: {
@@ -108,62 +138,62 @@ const DayCell = memo(function DayCell({
 }) {
   const getBufferConfig = useCallback((purpose: string) => {
     const configs: Record<string, { bg: string; color: string }> = {
-      transition: { bg: "bg-gray-100 dark:bg-gray-700", color: "text-gray-600 dark:text-gray-300" },
-      recovery: { bg: "bg-amber-100 dark:bg-amber-900/30", color: "text-amber-600 dark:text-amber-300" },
-      buffer: { bg: "bg-blue-100 dark:bg-blue-900/30", color: "text-blue-600 dark:text-blue-300" },
-      travel: { bg: "bg-purple-100 dark:bg-purple-900/30", color: "text-purple-600 dark:text-purple-300" },
+      transition: { bg: "bg-[#F5F5F4]", color: "text-[#57534E]" },
+      recovery: { bg: "bg-[#FEF3C7]", color: "text-[#B45309]" },
+      buffer: { bg: "bg-[#DBEAFE]", color: "text-[#1D4ED8]" },
+      travel: { bg: "bg-[#F3E8FF]", color: "text-[#7E22CE]" },
     };
     return configs[purpose] || configs.buffer;
   }, []);
 
   return (
     <div
-      className={`
-        flex flex-col flex-1 p-1 transition-colors cursor-pointer
-        ${!isCurrentMonthDay ? "opacity-40" : ""}
-        ${isCurrentDay ? "bg-blue-50/50 dark:bg-blue-900/20" : ""}
-        hover:bg-gray-50 dark:hover:bg-[#252830]/50
-      `}
+      className={cn(
+        "flex flex-col flex-1 p-1 transition-all cursor-pointer",
+        !isCurrentMonthDay && "opacity-40",
+        isCurrentDay && "bg-[var(--bg-secondary)]/50",
+        "hover:bg-[var(--bg-secondary)] hover:scale-[1.01]"
+      )}
       onClick={() => isCurrentMonthDay && onDateClick?.(day)}
     >
       {/* Day number */}
       <div className="flex justify-center shrink-0 mb-0.5">
         <span
-          className={`
-            inline-flex items-center justify-center w-5 h-5 text-xs font-medium transition-all duration-200
-            ${isCurrentDay 
-              ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" 
-              : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-full"
-            }
-            ${!isCurrentMonthDay ? "text-gray-400 dark:text-gray-500" : ""}
-          `}
+          className={cn(
+            "inline-flex items-center justify-center w-6 h-6 text-xs font-medium transition-all duration-200 font-sans",
+            isCurrentDay 
+              ? "bg-[var(--accent)] text-[var(--accent-contrast)] shadow-lg shadow-black/10 animate-glow" 
+              : isCurrentMonthDay 
+                ? "text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-full"
+                : "text-[var(--text-muted)]"
+          )}
         >
           {format(day, "d")}
         </span>
       </div>
 
-      {/* Events as small bars - fills remaining space */}
+      {/* Events as minimal pills */}
       <div className="flex-1 flex flex-col gap-px overflow-hidden px-0.5">
-        {dayEvents.slice(0, 4).map((event) => {
-          const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50", border: "border-blue-500", text: "text-blue-700", hover: "hover:bg-blue-50" };
+        {dayEvents.slice(0, 3).map((event) => {
+          const colors = getSystemColorClass(event.system);
           return (
             <button
               key={event.id}
               onClick={(e) => { e.stopPropagation(); onEventClick?.(event, e); }}
               className={cn(
-                "w-full text-[9px] px-1 py-0.5 rounded-sm truncate text-left transition-all duration-150 hover:scale-[1.02]",
+                "w-full text-[9px] px-1.5 py-0.5 rounded truncate text-left transition-all duration-150 hover:scale-[1.02] font-sans",
                 colors.bgLight,
                 colors.text,
-                "border-l-2"
+                "border-l-2",
+                colors.bg.replace("bg-[", "border-[").replace("]", "")
               )}
-              style={{ borderLeftColor: colors.bg.replace("bg-", "") }}
             >
               {event.title}
             </button>
           );
         })}
-        {dayEvents.length > 4 && (
-          <span className="text-[8px] text-gray-500 dark:text-gray-400 text-center">+{dayEvents.length - 4}</span>
+        {dayEvents.length > 3 && (
+          <span className="text-[8px] text-[var(--text-muted)] text-center font-sans">+{dayEvents.length - 3}</span>
         )}
         {dayEvents.length === 0 && <div className="flex-1" />}
       </div>
@@ -174,7 +204,7 @@ const DayCell = memo(function DayCell({
           {dayBuffers.slice(0, 1).map((buffer) => {
             const config = getBufferConfig(buffer.purpose);
             return (
-              <div key={buffer.id} className={`text-[9px] px-1 rounded ${config.bg} ${config.color}`}>
+              <div key={buffer.id} className={cn("text-[9px] px-1 rounded font-sans", config.bg, config.color)}>
                 {buffer.duration}m
               </div>
             );
@@ -203,7 +233,7 @@ export function MonthView({ date, events, buffers, systemColors, onDateClick, on
     return eachDayOfInterval({ start: monthStart, end: monthEnd });
   }, [date]);
 
-  const viewStart = startOfDay(startOfWeek(date));
+  const viewStart = startOfDay(startOfMonth(date));
   const startDayOfWeek = viewStart.getDay();
   const emptyDays = Array(startDayOfWeek).fill(null);
 
@@ -315,22 +345,27 @@ export function MonthView({ date, events, buffers, systemColors, onDateClick, on
     onEventMove(eventData.id, newStartTime.getTime(), newEndTime.getTime());
   };
 
+  const getSystemColorClassForDrag = (system?: string) => {
+    const colors = getSystemColorClass(system);
+    return colors.bg;
+  };
+
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="h-full flex flex-col bg-white dark:bg-[#1A1D24]">
-        {/* Weekday headers */}
-        <div className="grid grid-cols-7 border-b border-gray-100 dark:border-[#333] shrink-0">
+      <div className="h-full flex flex-col bg-[var(--bg-primary)]">
+        {/* Weekday headers - refined typography */}
+        <div className="grid grid-cols-7 border-b border-[var(--border)] shrink-0">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <div key={day} className="py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+            <div key={day} className="py-2 text-center text-xs font-medium text-[var(--text-muted)] font-sans">
               {day}
             </div>
           ))}
         </div>
 
-        {/* Calendar grid - fills remaining space */}
+        {/* Calendar grid */}
         <div className="flex-1 grid grid-cols-7 auto-rows-fr">
           {emptyDays.map((_, index) => (
-            <div key={`empty-${index}`} className="bg-gray-50/50 dark:bg-[#252830]/50 border-r border-b border-gray-100 dark:border-[#333]" />
+            <div key={`empty-${index}`} className="bg-[var(--bg-secondary)]/30 border-r border-b border-[var(--border)]" />
           ))}
 
           {days.map((day) => {
@@ -365,7 +400,10 @@ export function MonthView({ date, events, buffers, systemColors, onDateClick, on
 
       <DragOverlay>
         {activeEvent && (
-          <div className={`px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-lg ${systemColors[activeEvent.system as keyof typeof systemColors]?.bg || "bg-gray-500"}`}>
+          <div className={cn(
+            "px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-lg font-sans",
+            getSystemColorClassForDrag(activeEvent.system)
+          )}>
             {activeEvent.title}
           </div>
         )}

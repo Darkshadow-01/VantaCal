@@ -137,14 +137,14 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
 
           {status === "connecting" && (
             <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#5B8DEF]" />
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-stone-600 dark:text-stone-400" />
               <p className="mt-4 text-gray-600 dark:text-gray-400">Connecting to Google...</p>
             </div>
           )}
 
           {status === "importing" && (
             <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#5B8DEF]" />
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-stone-600 dark:text-stone-400" />
               <p className="mt-4 text-gray-600 dark:text-gray-400">Importing events...</p>
             </div>
           )}

@@ -210,61 +210,34 @@ export function EventModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2" onClick={onClose}>
       <div 
-        className="bg-white dark:bg-[#1A1D24] rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-[#333] overflow-hidden"
+        className="bg-[var(--bg-primary)] rounded-lg w-full max-w-lg sm:max-w-xl shadow-xl border border-[var(--border)] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-5 border-b border-gray-100 dark:border-[#333]">
+        <div className="p-2 border-b border-[var(--border)]">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {event ? "Edit event" : "Create event"}
-              </h2>
-              {!event && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                  AI will suggest optimal buffers
-                </p>
-              )}
-            </div>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-            >
-              <X className="w-5 h-5 text-gray-500" />
+            <h2 className="text-base font-serif text-[var(--text-primary)] font-medium">
+              {event ? "Edit event" : "Create event"}
+            </h2>
+            <button onClick={onClose} className="p-1 hover:bg-[var(--bg-secondary)] rounded press-scale">
+              <X className="w-3.5 h-3.5 text-[var(--text-muted)]" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {/* AI Input Toggle */}
+        <form onSubmit={handleSubmit} className="p-2 space-y-2">
           {!showAiInput && (
-            <button
-              type="button"
-              onClick={() => setShowAiInput(true)}
-              className="flex items-center gap-2 text-sm text-[#5B8DEF] hover:text-[#4A7EDE] transition-colors"
-            >
-              <Sparkles className="w-4 h-4" />
-              Add with AI
+            <button type="button" onClick={() => setShowAiInput(true)} className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+              <Sparkles className="w-2.5 h-2.5" />Add with AI
             </button>
           )}
 
           {showAiInput && (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                placeholder="e.g., Meeting tomorrow at 3pm"
-                className="flex-1 px-3 py-2 bg-gray-100 dark:bg-[#252830] border border-transparent rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-[#5B8DEF]"
-              />
-              <button
-                type="button"
-                onClick={handleVoiceInput}
-                disabled={isListening}
-                className={cn("p-2 rounded-lg transition-colors", isListening ? "bg-red-500 text-white" : "bg-gray-100 dark:bg-[#252830] text-gray-500 hover:text-gray-700")}
+            <div className="flex gap-1.5">
+              <input type="text" value={aiInput} onChange={(e) => setAiInput(e.target.value)} placeholder="e.g., Meeting tomorrow at 3pm" className="flex-1 px-2.5 py-1.5 bg-[var(--bg-secondary)] rounded text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]" />
+              <button type="button" onClick={handleVoiceInput} disabled={isListening}
+                className={cn("p-1.5 rounded transition-all", isListening ? "bg-red-500 text-white" : "bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
               >
                 {isListening ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
               </button>
@@ -272,7 +245,7 @@ export function EventModal({
                 type="button"
                 onClick={handleAiParse}
                 disabled={!aiInput.trim() || isAiLoading}
-                className="px-3 py-2 bg-[#5B8DEF] text-white rounded-lg text-sm hover:bg-[#4A7EDE] disabled:opacity-50"
+                className="px-2.5 py-1.5 bg-[var(--accent)] text-[var(--accent-contrast)] rounded text-xs press-scale disabled:opacity-50"
               >
                 {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Parse"}
               </button>
@@ -286,7 +259,7 @@ export function EventModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Add title"
-              className="w-full text-lg font-medium bg-transparent border-none outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white focus:ring-0 p-0"
+              className="w-full text-base font-serif bg-transparent border-b border-[var(--border)] focus:border-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] text-[var(--text-primary)] p-0 py-1"
               autoFocus
             />
           </div>
@@ -303,11 +276,11 @@ export function EventModal({
                     "p-2.5 rounded-xl border-2 transition-all duration-200 text-center group",
                     system === sys && !customColor
                       ? `${systemColors[sys].border} ${systemColors[sys].bgLight}`
-                      : "border-gray-100 dark:border-[#333] hover:border-gray-300 dark:hover:border-[#444] hover:scale-[1.02] active:scale-[0.98]"
+                      : "border-[var(--border)] hover:border-[var(--text-muted)] hover:scale-[1.02] active:scale-[0.98]"
                   )}
                 >
                   <div className={cn("w-3 h-3 rounded-full mx-auto mb-1.5 transition-transform", systemColors[sys].bg, system === sys && !customColor && "scale-110")} />
-                  <span className={cn("text-xs font-medium", system === sys && !customColor ? systemColors[sys].text : "text-gray-600 dark:text-gray-400")}>{sys}</span>
+                  <span className={cn("text-xs font-medium", system === sys && !customColor ? systemColors[sys].text : "text-[var(--text-secondary)]")}>{sys}</span>
                 </button>
               ))}
             </div>
@@ -315,7 +288,7 @@ export function EventModal({
 
           {/* Custom Color Picker */}
           <div>
-            <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 block">Or choose a color</label>
+            <label className="text-xs font-medium text-[var(--text-muted)] mb-2 block">Or choose a color</label>
             <div className="flex gap-1.5 flex-wrap">
               {[
                 { bg: "bg-red-500", value: "red" },
@@ -323,7 +296,7 @@ export function EventModal({
                 { bg: "bg-yellow-500", value: "yellow" },
                 { bg: "bg-green-500", value: "green" },
                 { bg: "bg-teal-500", value: "teal" },
-                { bg: "bg-blue-500", value: "blue" },
+                { bg: "bg-[#3B82F6]", value: "blue" },
                 { bg: "bg-indigo-500", value: "indigo" },
                 { bg: "bg-purple-500", value: "purple" },
                 { bg: "bg-pink-500", value: "pink" },
@@ -349,13 +322,13 @@ export function EventModal({
             <div className="relative" ref={datePickerRef}>
               <button
                 type="button"
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group"
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group"
                 onClick={() => setShowDatePicker(!showDatePicker)}
               >
-                <Calendar className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                <Calendar className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{startDate ? format(new Date(startDate), "EEE, MMM d, yyyy") : "Select date"}</span>
+                    <span className="text-sm font-medium text-[var(--text-primary)]">{startDate ? format(new Date(startDate), "EEE, MMM d, yyyy") : "Select date"}</span>
                   </div>
                   {!allDay && startTime && endTime && (
                     <div className="text-sm text-gray-500">{startTime} - {endTime}</div>
@@ -365,32 +338,32 @@ export function EventModal({
 
               {/* Date picker dropdown */}
               {showDatePicker && (
-                <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1A1D24] rounded-xl shadow-xl border border-gray-200 dark:border-[#333] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1A1D24] rounded-xl shadow-xl border border-[var(--border)] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-3 border-b border-gray-100 dark:border-[#333]">
                     <div className="flex items-center justify-between">
                       <button
                         type="button"
                         onClick={() => setPickerDate(subMonths(pickerDate, 1))}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-gray-100 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
                       >
-                        <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                        <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
                       </button>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      <span className="text-sm font-medium text-[var(--text-primary)]">
                         {format(pickerDate, "MMMM yyyy")}
                       </span>
                       <button
                         type="button"
                         onClick={() => setPickerDate(addMonths(pickerDate, 1))}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-gray-100 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
                       >
-                        <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                        <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
                       </button>
                     </div>
                   </div>
                   <div className="p-3">
                     <div className="grid grid-cols-7 gap-1 mb-2">
                       {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
-                        <div key={i} className="text-xs text-center text-gray-400 font-medium">{day}</div>
+                        <div key={i} className="text-xs text-center text-[var(--text-muted)] font-medium">{day}</div>
                       ))}
                     </div>
                     <div className="grid grid-cols-7 gap-1">
@@ -412,10 +385,10 @@ export function EventModal({
                             }}
                             className={cn(
                               "w-8 h-8 rounded-full text-sm transition-all duration-150",
-                              isCurrentMonth ? "text-gray-700 dark:text-gray-200" : "text-gray-300 dark:text-gray-600",
-                              isSelected && "bg-blue-500 text-white",
-                              !isSelected && isToday(day) && "ring-2 ring-blue-300 ring-inset",
-                              !isSelected && isCurrentMonth && "hover:bg-gray-100 dark:hover:bg-[#252830]"
+                              isCurrentMonth ? "text-[var(--text-primary)]" : "text-gray-300 dark:text-gray-600",
+                              isSelected && "bg-[var(--accent)] text-[var(--accent-contrast)]",
+                              !isSelected && isToday(day) && "ring-2 ring-[var(--accent)] ring-inset",
+                              !isSelected && isCurrentMonth && "hover:bg-gray-100 hover:bg-[var(--bg-secondary)]"
                             )}
                           >
                             {format(day, "d")}
@@ -430,7 +403,7 @@ export function EventModal({
                   <button
                     type="button"
                     onClick={() => setShowSuggestedTimes(!showSuggestedTimes)}
-                    className="text-xs text-[#5B8DEF] hover:text-[#4A7EDE] flex items-center gap-1"
+                    className="text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1"
                   >
                     <Clock className="w-3 h-3" />
                     Suggested times
@@ -442,7 +415,7 @@ export function EventModal({
                           key={time}
                           type="button"
                           onClick={() => { setStartTime(time); setShowSuggestedTimes(false); }}
-                          className="px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                          className="px-2 py-1 text-xs bg-[var(--bg-secondary)] text-[var(--text-secondary)] rounded hover:bg-[var(--border)]"
                         >
                           {time}
                         </button>
@@ -456,10 +429,10 @@ export function EventModal({
             </div>
 
             {/* All Day Toggle */}
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors cursor-pointer" onClick={() => setAllDay(!allDay)}>
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer" onClick={() => setAllDay(!allDay)}>
               <div className={cn(
                 "w-10 h-6 rounded-full transition-all duration-300 relative",
-                allDay ? "bg-blue-500" : "bg-gray-200 dark:bg-gray-700"
+                allDay ? "bg-[var(--accent)]" : "bg-[var(--border)]"
               )}>
                 <div className={cn(
                   "absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300",
@@ -476,7 +449,7 @@ export function EventModal({
                   <select
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full appearance-none p-2.5 pl-10 rounded-lg border border-gray-200 dark:border-[#333] bg-transparent text-sm text-gray-700 dark:text-gray-200 cursor-pointer hover:border-gray-300 dark:hover:border-[#444] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full appearance-none p-2 pl-8 rounded border border-[var(--border)] bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white cursor-pointer hover:border-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] font-mono"
                   >
                     {Array.from({ length: 24 * 2 }, (_, i) => {
                       const h = Math.floor(i / 2);
@@ -485,13 +458,13 @@ export function EventModal({
                       return <option key={val} value={val}>{format(new Date(`2024-01-01T${val}`), "h:mm a")}</option>;
                     })}
                   </select>
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
                 </div>
                 <div className="relative group">
                   <select
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full appearance-none p-2.5 pl-10 rounded-lg border border-gray-200 dark:border-[#333] bg-transparent text-sm text-gray-700 dark:text-gray-200 cursor-pointer hover:border-gray-300 dark:hover:border-[#444] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full appearance-none p-2 pl-8 rounded border border-[var(--border)] bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white cursor-pointer hover:border-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] font-mono"
                   >
                     {Array.from({ length: 24 * 2 }, (_, i) => {
                       const h = Math.floor(i / 2);
@@ -500,31 +473,31 @@ export function EventModal({
                       return <option key={val} value={val}>{format(new Date(`2024-01-01T${val}`), "h:mm a")}</option>;
                     })}
                   </select>
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
                 </div>
               </div>
             )}
           </div>
 
           {/* Location */}
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
-            <MapPin className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+            <MapPin className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Add location"
-              className="flex-1 bg-transparent border-none outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm text-gray-700 dark:text-gray-200"
+              className="flex-1 bg-transparent border-none outline-none placeholder:text-[var(--text-muted)] text-sm text-[var(--text-primary)]"
             />
           </div>
 
           {/* Recurrence */}
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
-            <Repeat className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+            <Repeat className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
             <select
               value={recurrence}
               onChange={(e) => setRecurrence(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
+              className="flex-1 bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
             >
               <option value="none">Does not repeat</option>
               <option value="daily">Daily</option>
@@ -541,7 +514,7 @@ export function EventModal({
               <select
                 value={recurrenceEndType}
                 onChange={(e) => setRecurrenceEndType(e.target.value as typeof recurrenceEndType)}
-                className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
+                className="w-full bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
               >
                 <option value="never">Never ends</option>
                 <option value="onDate">Ends on date</option>
@@ -553,7 +526,7 @@ export function EventModal({
                   type="date"
                   value={recurrenceEndDate}
                   onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#252830] border border-gray-200 dark:border-[#333] rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200"
+                  className="w-full bg-[var(--bg-secondary)] dark:bg-[#252830] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)]"
                 />
               )}
               
@@ -566,7 +539,7 @@ export function EventModal({
                     max={100}
                     value={recurrenceCount}
                     onChange={(e) => setRecurrenceCount(Number(e.target.value))}
-                    className="w-16 bg-gray-50 dark:bg-[#252830] border border-gray-200 dark:border-[#333] rounded-lg px-2 py-1 text-sm text-gray-700 dark:text-gray-200"
+                    className="w-16 bg-[var(--bg-secondary)] dark:bg-[#252830] border border-[var(--border)] rounded-lg px-2 py-1 text-sm text-[var(--text-primary)]"
                   />
                   <span className="text-sm text-gray-500">occurrences</span>
                 </div>
@@ -575,12 +548,12 @@ export function EventModal({
           )}
 
           {/* Reminder */}
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
-            <Bell className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+            <Bell className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
             <select
               value={reminder}
               onChange={(e) => setReminder(Number(e.target.value))}
-              className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
+              className="flex-1 bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
             >
               <option value={0}>No reminder</option>
               <option value={5}>5 minutes before</option>
@@ -593,26 +566,26 @@ export function EventModal({
           </div>
 
           {/* Guests */}
-          <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group">
-            <Users className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors mt-0.5" />
+          <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group">
+            <Users className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors mt-0.5" />
             <div className="flex-1">
               <div className="flex items-center gap-1 mb-1">
-                <span className="text-sm text-gray-700 dark:text-gray-200">Add guests</span>
+                <span className="text-sm text-[var(--text-primary)]">Add guests</span>
                 {guests.length > 0 && (
-                  <span className="text-xs text-gray-400">({guests.length})</span>
+                  <span className="text-xs text-[var(--text-muted)]">({guests.length})</span>
                 )}
               </div>
               <div className="flex flex-wrap gap-1 mb-2">
                 {guests.map((guest, idx) => (
                   <span 
                     key={idx} 
-                    className="inline-flex items-center gap-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full"
+                    className="inline-flex items-center gap-1 text-xs bg-[var(--bg-secondary)] text-[var(--text-secondary)] px-2 py-0.5 rounded-full"
                   >
                     {guest}
                     <button 
                       type="button"
                       onClick={() => setGuests(guests.filter((_, i) => i !== idx))}
-                      className="hover:text-blue-900"
+                      className="hover:text-[var(--text-primary)]"
                     >
                       ×
                     </button>
@@ -625,7 +598,7 @@ export function EventModal({
                   value={newGuest}
                   onChange={(e) => setNewGuest(e.target.value)}
                   placeholder="Enter email"
-                  className="flex-1 bg-transparent border-b border-gray-200 dark:border-[#333] outline-none text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400"
+                  className="flex-1 bg-transparent border-b border-[var(--border)] outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && newGuest.trim()) {
                       setGuests([...guests, newGuest.trim()]);
@@ -637,7 +610,7 @@ export function EventModal({
                   <button
                     type="button"
                     onClick={() => { setGuests([...guests, newGuest.trim()]); setNewGuest(""); }}
-                    className="text-xs text-blue-500 hover:text-blue-600"
+                    className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   >
                     Add
                   </button>
@@ -647,20 +620,20 @@ export function EventModal({
           </div>
 
           {/* Description */}
-          <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] transition-colors duration-200 group cursor-pointer">
-            <FileText className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors mt-0.5" />
+          <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+            <FileText className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors mt-0.5" />
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add description"
               rows={2}
-              className="flex-1 bg-transparent border-none outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm text-gray-700 dark:text-gray-200 resize-none"
+              className="flex-1 bg-transparent border-none outline-none placeholder:text-[var(--text-muted)] dark:placeholder:text-gray-500 text-sm text-[var(--text-primary)] resize-none"
             />
           </div>
 
           {/* AI Buffer Suggestion */}
           {!event && (
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3.5 border border-purple-100 dark:border-purple-800/50">
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3.5 border border-purple-100 border-[#9333EA]/30">
               <div className="flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
@@ -679,7 +652,7 @@ export function EventModal({
                     <button
                       type="button"
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors"
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
@@ -696,7 +669,7 @@ export function EventModal({
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                    className="p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                   >
                     <AlertTriangle className="w-4 h-4" />
                   </button>
@@ -707,7 +680,7 @@ export function EventModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:bg-[var(--bg-secondary)] rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 Cancel
               </button>
@@ -718,7 +691,7 @@ export function EventModal({
                   "px-5 py-2 text-sm font-medium text-white rounded-full transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg",
                   !title.trim() || isSaving
                     ? "bg-gray-300 dark:bg-gray-700 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/30"
+                    : "bg-[var(--accent)] hover:opacity-90"
                 )}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}

@@ -160,7 +160,7 @@ export function EventDetailModal({
             </div>
           ) : (
             <div className="flex gap-3">
-              <button onClick={onEdit} className="flex-1 py-2 bg-[#5B8DEF] hover:bg-[#4A7DDE] text-white rounded-lg font-medium transition-colors">
+              <button onClick={onEdit} className="flex-1 py-2 bg-stone-600 hover:bg-stone-700 text-white rounded-lg font-medium transition-colors">
                 Edit
               </button>
               {isRecurring ? (

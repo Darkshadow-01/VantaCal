@@ -186,7 +186,7 @@ export function SharingPanel({
     <div className="bg-white dark:bg-[#1A1D24] rounded-xl border border-gray-200 dark:border-[#333] shadow-lg overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#333]">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-[#5B8DEF]" />
+          <Shield className="w-5 h-5 text-[var(--accent)]" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Sharing
           </h2>
@@ -204,7 +204,7 @@ export function SharingPanel({
           onClick={() => setActiveTab("members")}
           className={`flex-1 py-3 text-sm font-medium transition-colors ${
             activeTab === "members"
-              ? "text-[#5B8DEF] border-b-2 border-[#5B8DEF]"
+              ? "text-[var(--accent)] border-b-2 border-[var(--accent)]"
               : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           }`}
         >
@@ -215,7 +215,7 @@ export function SharingPanel({
           onClick={() => setActiveTab("links")}
           className={`flex-1 py-3 text-sm font-medium transition-colors ${
             activeTab === "links"
-              ? "text-[#5B8DEF] border-b-2 border-[#5B8DEF]"
+              ? "text-[var(--accent)] border-b-2 border-[var(--accent)]"
               : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           }`}
         >
@@ -226,7 +226,7 @@ export function SharingPanel({
           onClick={() => setActiveTab("invites")}
           className={`flex-1 py-3 text-sm font-medium transition-colors ${
             activeTab === "invites"
-              ? "text-[#5B8DEF] border-b-2 border-[#5B8DEF]"
+              ? "text-[var(--accent)] border-b-2 border-[var(--accent)]"
               : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           }`}
         >
@@ -252,7 +252,7 @@ export function SharingPanel({
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter email address"
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-[#5B8DEF]"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-stone-500"
                       />
                     </div>
                   </div>
@@ -262,7 +262,7 @@ export function SharingPanel({
                       onChange={(e) =>
                         setPermission(e.target.value as AccessLevel)
                       }
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white outline-none focus:border-[#5B8DEF]"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white outline-none focus:border-stone-500"
                     >
                       <option value="read">Can view</option>
                       <option value="write">Can edit</option>
@@ -340,28 +340,28 @@ export function SharingPanel({
                     value={linkTitle}
                     onChange={(e) => setLinkTitle(e.target.value)}
                     placeholder="Link title (optional)"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-[#5B8DEF]"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-stone-500"
                   />
                   <input
                     type="password"
                     value={linkPassword}
                     onChange={(e) => setLinkPassword(e.target.value)}
                     placeholder="Password protection (optional)"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-[#5B8DEF]"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-stone-500"
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="datetime-local"
                       value={linkExpires}
                       onChange={(e) => setLinkExpires(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white outline-none focus:border-[#5B8DEF]"
+                      className="px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white outline-none focus:border-stone-500"
                     />
                     <input
                       type="number"
                       value={linkMaxUses}
                       onChange={(e) => setLinkMaxUses(e.target.value)}
                       placeholder="Max uses"
-                      className="px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-[#5B8DEF]"
+                      className="px-3 py-2 border border-gray-300 dark:border-[#333] rounded-lg bg-white dark:bg-[#1A1D24] text-gray-900 dark:text-white placeholder:text-gray-500 outline-none focus:border-stone-500"
                     />
                   </div>
                   <Button onClick={handleCreateLink} className="w-full">

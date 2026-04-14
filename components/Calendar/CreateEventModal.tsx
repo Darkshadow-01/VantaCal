@@ -51,7 +51,7 @@ const defaultEvent = (): NewEventState => ({
   time: "",
   endTime: "",
   type: "event",
-  color: "#5B8DEF",
+  color: "#1C1917",
   allDay: false,
   repeat: "none",
   repeatType: "daily",
@@ -401,7 +401,7 @@ export function CreateEventModal({ isOpen, onClose, onSave, initialDate, initial
                     }}
                     className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
                       newEvent.repeatDays.includes(day.value)
-                        ? "bg-[#5B8DEF] text-white"
+                        ? "bg-[var(--accent)] text-[var(--accent-contrast)]"
                         : "bg-gray-100 dark:bg-[#252830] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#333]"
                     }`}
                   >
@@ -411,7 +411,7 @@ export function CreateEventModal({ isOpen, onClose, onSave, initialDate, initial
                 <button
                   type="button"
                   onClick={() => setNewEvent({ ...newEvent, repeatDays: [1, 2, 3, 4, 5] })}
-                  className="text-xs text-[#5B8DEF] hover:underline ml-2"
+                  className="text-xs text-[var(--accent)] hover:underline ml-2"
                 >
                   Weekdays (M-F)
                 </button>
@@ -455,7 +455,7 @@ export function CreateEventModal({ isOpen, onClose, onSave, initialDate, initial
                         }}
                         className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
                           newEvent.repeatDays.includes(day.value)
-                            ? "bg-[#5B8DEF] text-white"
+                            ? "bg-[var(--accent)] text-[var(--accent-contrast)]"
                             : "bg-gray-200 dark:bg-[#252830] text-gray-600 dark:text-gray-400"
                         }`}
                       >
@@ -500,7 +500,7 @@ export function CreateEventModal({ isOpen, onClose, onSave, initialDate, initial
                 onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                 placeholder="Add description"
                 rows={3}
-                className="w-full bg-white dark:bg-[#1A1D24] border border-gray-300 dark:border-[#2a2d33] rounded-lg text-gray-900 dark:text-white placeholder:text-gray-500 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#5B8DEF]/50"
+                className="w-full bg-white dark:bg-[#1A1D24] border border-gray-300 dark:border-[#2a2d33] rounded-lg text-gray-900 dark:text-white placeholder:text-gray-500 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
               />
             </div>
 

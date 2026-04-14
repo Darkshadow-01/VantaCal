@@ -52,32 +52,34 @@ export function SearchModal<T extends { id?: string; title: string; startTime?: 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-[#1A1D24] rounded-xl w-full max-w-lg border border-gray-200 dark:border-[#333] shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b border-gray-200 dark:border-[#333]">
+      <div className="bg-[var(--bg-elevated)] rounded-xl w-full max-w-lg border border-[var(--border)] shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
+        {/* Search input - Minimal style */}
+        <div className="p-4 border-b border-[var(--border)]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search events by title, location, or date..."
               autoFocus
-              className="w-full bg-gray-100 dark:bg-[#252830] border-0 rounded-lg pl-10 pr-10 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5B8DEF]"
+              className="w-full bg-[var(--bg-secondary)] border-0 rounded-lg pl-10 pr-10 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
             />
-            <button onClick={onClose} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-[#333] rounded">
-              <X className="w-4 h-4 text-gray-500" />
+            <button onClick={onClose} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-[var(--bg-secondary)] rounded-lg transition-all press-scale">
+              <X className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
           </div>
           
+          {/* Filter chips - Monochrome */}
           <div className="flex gap-2 mt-3">
             {(["all", "title", "location", "date"] as const).map((type) => (
               <button
                 key={type}
                 onClick={() => setSearchType(type)}
-                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                className={`px-3 py-1.5 text-xs rounded-full transition-all ${
                   searchType === type 
-                    ? "bg-[#5B8DEF] text-white" 
-                    : "bg-gray-100 dark:bg-[#252830] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#333]"
+                    ? "bg-[var(--accent)] text-[var(--accent-contrast)]" 
+                    : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border)]"
                 }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -93,12 +95,12 @@ export function SearchModal<T extends { id?: string; title: string; startTime?: 
                 <button
                   key={event.id || idx}
                   onClick={() => { onSelectEvent(event); onClose(); }}
-                  className="w-full p-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg text-left transition-colors"
+                  className="w-full p-3 flex items-center gap-3 hover:bg-[var(--bg-secondary)] rounded-lg text-left transition-all"
                 >
-                  <div className="w-3 h-3 rounded-full bg-[#5B8DEF]" />
+                  <div className="w-3 h-3 rounded-full bg-[var(--accent)]" />
                   <div className="flex-1">
-                    <p className="text-gray-900 dark:text-white font-medium">{event.title}</p>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-[var(--text-primary)] font-medium">{event.title}</p>
+                    <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {formatEventDate(event.startTime)}
@@ -111,16 +113,16 @@ export function SearchModal<T extends { id?: string; title: string; startTime?: 
                       )}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
                 </button>
               ))}
             </div>
           ) : searchQuery ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-[var(--text-muted)]">
               No results found for &quot;{searchQuery}&quot;
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-[var(--text-muted)]">
               Start typing to search events
             </div>
           )}

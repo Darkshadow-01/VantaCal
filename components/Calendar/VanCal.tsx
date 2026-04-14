@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { format, subMonths, addMonths, subWeeks, addWeeks, subDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import { useState, useMemo, useEffect } from "react";
+import { format, subMonths, addMonths, subWeeks, addWeeks, subDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from "date-fns";
 import { ChevronLeft, ChevronRight, Plus, Search, Calendar as CalendarIcon, Download, Upload, Settings, Sparkles } from "lucide-react";
 import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
@@ -16,6 +16,8 @@ import { AIAssistantModal } from "./AIAssistantModal";
 import { useEvents } from "@/hooks/useEvents";
 import { useSettings } from "@/hooks/useSettings";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { VaultWarningBanner } from "./VaultStatusBadge";
+import { VaultSetupModal } from "./VaultSetupModal";
 import type { CalendarEvent } from "@/src/domain/calendar/event";
 import { cn } from "@/lib/utils";
 
@@ -28,9 +30,27 @@ interface SystemColors {
 }
 
 const SYSTEM_COLORS: Record<"Health" | "Work" | "Relationships", SystemColors> = {
-  Health: { bg: "bg-green-500", bgLight: "bg-green-50", border: "border-green-500", text: "text-green-700", hover: "hover:bg-green-50" },
-  Work: { bg: "bg-blue-500", bgLight: "bg-blue-50", border: "border-blue-500", text: "text-blue-700", hover: "hover:bg-blue-50" },
-  Relationships: { bg: "bg-purple-500", bgLight: "bg-purple-50", border: "border-purple-500", text: "text-purple-700", hover: "hover:bg-purple-50" },
+  Health: { 
+    bg: "bg-[#16A34A]", 
+    bgLight: "bg-[#DCFCE7]", 
+    border: "border-[#16A34A]", 
+    text: "text-[#16A34A]", 
+    hover: "hover:bg-[#DCFCE7]" 
+  },
+  Work: { 
+    bg: "bg-[var(--accent)]", 
+    bgLight: "bg-[var(--bg-secondary)]", 
+    border: "border-[var(--accent)]", 
+    text: "text-[var(--text-primary)]", 
+    hover: "hover:bg-[var(--bg-secondary)]" 
+  },
+  Relationships: { 
+    bg: "bg-[#9333EA]", 
+    bgLight: "bg-[#F3E8FF]", 
+    border: "border-[#9333EA]", 
+    text: "text-[#9333EA]", 
+    hover: "hover:bg-[#F3E8FF]" 
+  },
 };
 
 type ViewType = "daily" | "weekly" | "monthly" | "yearly" | "agenda";
@@ -60,20 +80,35 @@ function MiniCalendar({ currentDate, selectedDate, events, onDateSelect }: {
     return map;
   }, [events]);
 
+  const getSystemColor = (system?: string) => {
+    switch (system) {
+      case "Health": return "bg-[#16A34A]";
+      case "Work": return "bg-[#2563EB]";
+      case "Relationships": return "bg-[#9333EA]";
+      default: return "bg-[#57534E]";
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-[#1A1D24] rounded-xl border border-gray-100 dark:border-[#333] overflow-hidden">
-      <div className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-[#333]">
-        <button onClick={() => setViewMonth(subMonths(viewMonth, 1))} className="p-1.5 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors">
-          <ChevronLeft className="w-4 h-4 text-gray-500" />
+    <div className="bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] overflow-hidden">
+      <div className="flex items-center justify-between p-3 border-b border-[var(--border)]">
+        <button 
+          onClick={() => setViewMonth(subMonths(viewMonth, 1))} 
+          className="p-1.5 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale"
+        >
+          <ChevronLeft className="w-4 h-4 text-[var(--text-muted)]" />
         </button>
-        <span className="text-sm font-semibold text-gray-900 dark:text-white">{format(viewMonth, "MMMM yyyy")}</span>
-        <button onClick={() => setViewMonth(addMonths(viewMonth, 1))} className="p-1.5 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors">
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+        <span className="text-sm font-medium text-[var(--text-primary)] font-sans">{format(viewMonth, "MMMM yyyy")}</span>
+        <button 
+          onClick={() => setViewMonth(addMonths(viewMonth, 1))} 
+          className="p-1.5 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale"
+        >
+          <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
         </button>
       </div>
-      <div className="grid grid-cols-7 border-b border-gray-100 dark:border-[#333]">
+      <div className="grid grid-cols-7 border-b border-[var(--border)]">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <div key={i} className="p-2 text-[10px] text-center font-medium text-gray-400">{d}</div>
+          <div key={i} className="p-2 text-[10px] text-center font-medium text-[var(--text-muted)]">{d}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 p-2 gap-1">
@@ -82,7 +117,7 @@ function MiniCalendar({ currentDate, selectedDate, events, onDateSelect }: {
           const key = format(day, "yyyy-MM-dd");
           const dayEvents = eventsByDay.get(key) || [];
           const isSelected = format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
-          const isToday = format(day, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+          const isTodayDate = isToday(day);
           
           return (
             <button
@@ -90,15 +125,19 @@ function MiniCalendar({ currentDate, selectedDate, events, onDateSelect }: {
               onClick={() => onDateSelect(day)}
               className={cn(
                 "h-7 text-xs flex flex-col items-center justify-center rounded-lg transition-all duration-150 relative",
-                isSelected ? "bg-blue-500 text-white font-medium" : isToday ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#252830]",
-                dayEvents.length > 0 && !isSelected && !isToday && "text-blue-600 dark:text-blue-400"
+                isSelected 
+                  ? "bg-[var(--accent)] text-[var(--accent-contrast)] font-medium" 
+                  : isTodayDate 
+                    ? "bg-[var(--bg-secondary)] text-[var(--text-primary)] font-medium ring-1 ring-[var(--accent)] ring-inset" 
+                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]",
+                dayEvents.length > 0 && !isSelected && !isTodayDate && "text-[var(--text-primary)]"
               )}
             >
               {format(day, "d")}
               {dayEvents.length > 0 && (
                 <div className="absolute bottom-0.5 flex gap-0.5">
                   {dayEvents.slice(0, 2).map((e, i) => (
-                    <div key={i} className={cn("w-1 h-1 rounded-full", e.system === "Health" ? "bg-green-500" : e.system === "Work" ? "bg-blue-500" : "bg-purple-500")} />
+                    <div key={i} className={cn("w-1 h-1 rounded-full", getSystemColor(e.system))} />
                   ))}
                 </div>
               )}
@@ -119,7 +158,9 @@ export function VanCal() {
   const [importExportOpen, setImportExportOpen] = useState(false);
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [vaultSetupOpen, setVaultSetupOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: Date; hour?: number } | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const { events, createEvent, updateEvent, deleteEvent } = useEvents();
   const { settings, updateSetting } = useSettings();
@@ -164,6 +205,15 @@ export function VanCal() {
     setShowModal(true);
   };
 
+  const handleViewChange = (newView: ViewType) => {
+    if (newView === view) return;
+    setIsAnimating(true);
+    setTimeout(() => {
+      setView(newView);
+      setIsAnimating(false);
+    }, 150);
+  };
+
   const handleSave = async (data: { title: string; description?: string; startTime: number; endTime: number; allDay: boolean; system: "Health" | "Work" | "Relationships"; location?: string; recurrence?: string; reminder?: number; color?: string; recurrenceEndType?: string; recurrenceEndDate?: string; recurrenceCount?: number; guests?: string[] }) => {
     const now = Date.now();
     const eventData = {
@@ -174,7 +224,7 @@ export function VanCal() {
       endTime: data.endTime,
       allDay: data.allDay,
       calendarId: "personal",
-      color: data.color || "#4F8DFD",
+      color: data.color || "#1C1917",
       type: "event",
       system: data.system,
       location: data.location,
@@ -219,34 +269,47 @@ export function VanCal() {
     return format(date, "yyyy");
   }, [view, date]);
 
-  // Keyboard shortcuts
   useKeyboardShortcuts({
     onCreateEvent: handleCreate,
     onToggleSearch: () => setSearchOpen(!searchOpen),
     onGoToToday: handleToday,
     onNext: handleNext,
     onPrev: handlePrev,
-    onDayView: () => setView("daily"),
-    onWeekView: () => setView("weekly"),
-    onMonthView: () => setView("monthly"),
-    onYearView: () => setView("yearly"),
+    onDayView: () => handleViewChange("daily"),
+    onWeekView: () => handleViewChange("weekly"),
+    onMonthView: () => handleViewChange("monthly"),
+    onYearView: () => handleViewChange("yearly"),
   });
 
+  const viewTabs: { id: ViewType; label: string }[] = [
+    { id: "daily", label: "Day" },
+    { id: "weekly", label: "Week" },
+    { id: "monthly", label: "Month" },
+    { id: "yearly", label: "Year" },
+    { id: "agenda", label: "Agenda" },
+  ];
+
   return (
-    <div className="h-screen flex bg-white dark:bg-gray-900">
-      {/* Left Sidebar */}
-      <aside className="w-72 border-r border-gray-100 dark:border-[#333] p-4 flex flex-col gap-4 bg-gray-50/50 dark:bg-[#1A1D24]">
+    <div className="h-screen flex bg-[var(--bg-primary)]">
+      {/* Left Sidebar - Glass Morphism */}
+      <aside className="w-72 border-r border-[var(--border)] p-4 flex flex-col gap-4 glass-light overflow-hidden">
         <div className="flex items-center gap-2 px-2">
-          <CalendarIcon className="w-5 h-5 text-blue-500" />
-          <span className="text-lg font-semibold text-gray-900 dark:text-white">Calendar</span>
+          <CalendarIcon className="w-5 h-5 text-[var(--text-primary)]" />
+          <span className="text-xl font-serif tracking-tight text-[var(--text-primary)]">VanCal</span>
         </div>
-        <MiniCalendar currentDate={date} selectedDate={date} events={events} onDateSelect={(d) => { setDate(d); setView("daily"); }} />
+        
+        <MiniCalendar 
+          currentDate={date} 
+          selectedDate={date} 
+          events={events} 
+          onDateSelect={(d) => { setDate(d); handleViewChange("daily"); }} 
+        />
         
         {/* Quick Actions */}
         <div className="space-y-2">
           <button
             onClick={handleCreate}
-            className="w-full flex items-center gap-3 px-3 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm shadow-blue-500/30"
+            className="w-full flex items-center gap-3 px-3 py-2.5 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg hover-lift shadow-sm transition-all duration-150 press-scale"
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm font-medium">New Event</span>
@@ -256,44 +319,82 @@ export function VanCal() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#333]">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-primary)]">
           <div className="flex items-center gap-4">
-            <div className="flex items-center bg-gray-100 dark:bg-[#252830] rounded-lg p-1">
-              {(["daily", "weekly", "monthly", "yearly", "agenda"] as ViewType[]).map((v) => (
+            {/* View Tabs - Underline indicator */}
+            <div className="flex items-center bg-[var(--bg-secondary)] rounded-lg p-1">
+              {viewTabs.map((tab) => (
                 <button
-                  key={v}
-                  onClick={() => setView(v)}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${view === v ? "bg-white dark:bg-[#333] text-gray-900 dark:text-white shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"}`}
+                  key={tab.id}
+                  onClick={() => handleViewChange(tab.id)}
+                  className={cn(
+                    "relative px-3 py-1.5 text-sm rounded-md transition-all duration-150",
+                    view === tab.id 
+                      ? "text-[var(--text-primary)]" 
+                      : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                  )}
                 >
-                  {v === "agenda" ? "Agenda" : v.charAt(0).toUpperCase() + v.slice(1)}
+                  {tab.label}
+                  {view === tab.id && (
+                    <span className="absolute bottom-0 left-1 right-1 h-0.5 bg-[var(--accent)] rounded-full animate-scale-in" />
+                  )}
                 </button>
               ))}
             </div>
+            
+            {/* Navigation */}
             <div className="flex items-center gap-1">
-              <button onClick={handlePrev} className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors">
-                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <button 
+                onClick={handlePrev} 
+                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale"
+              >
+                <ChevronLeft className="w-5 h-5 text-[var(--text-secondary)]" />
               </button>
-              <button onClick={handleToday} className="px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors font-medium">
+              <button 
+                onClick={handleToday} 
+                className="px-3 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 font-medium press-scale"
+              >
                 Today
               </button>
-              <button onClick={handleNext} className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors">
-                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <button 
+                onClick={handleNext} 
+                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale"
+              >
+                <ChevronRight className="w-5 h-5 text-[var(--text-secondary)]" />
               </button>
-              <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">{dateLabel}</span>
+              <span className="ml-2 text-lg font-serif text-[var(--text-primary)] tracking-tight">{dateLabel}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setSearchOpen(!searchOpen)} className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors" title="Search (Ctrl+F)">
-              <Search className="w-5 h-5 text-gray-500" />
+          
+          {/* Actions */}
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => setSearchOpen(!searchOpen)} 
+              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              title="Search (Ctrl+F)"
+            >
+              <Search className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
-            <button onClick={() => setImportExportOpen(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors" title="Import/Export">
-              <Download className="w-5 h-5 text-gray-500" />
+            <button 
+              onClick={() => setImportExportOpen(true)} 
+              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              title="Import/Export"
+            >
+              <Download className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
-            <button onClick={() => setAiAssistantOpen(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors text-[#5B8DEF]" title="AI Assistant (Ctrl+Shift+A)">
-              <Sparkles className="w-5 h-5" />
+            <button 
+              onClick={() => setAiAssistantOpen(true)} 
+              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              title="AI Assistant (Ctrl+Shift+A)"
+            >
+              <Sparkles className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
-            <button onClick={() => setSettingsOpen(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors" title="Settings">
-              <Settings className="w-5 h-5 text-gray-500" />
+            <button 
+              onClick={() => setSettingsOpen(true)} 
+              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              title="Settings"
+            >
+              <Settings className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
           </div>
         </header>
@@ -327,12 +428,71 @@ export function VanCal() {
           onAddEvent={(event) => createEvent(event as any)}
         />
 
-        <main className="flex-1 overflow-auto">
-          {view === "daily" && <DayView date={date} events={events} buffers={[]} systemColors={SYSTEM_COLORS} onSlotClick={handleSlotClick} onEventClick={handleEdit} onEventMove={(id: string, start: number, end: number) => updateEvent(id, { startTime: start, endTime: end })} />}
-          {view === "weekly" && <WeekView date={date} events={events} buffers={[]} systemColors={SYSTEM_COLORS} onSlotClick={handleSlotClick} onEventClick={handleEdit} onEventMove={(id: string, start: number, end: number) => updateEvent(id, { startTime: start, endTime: end })} />}
-          {view === "monthly" && <MonthView date={date} events={events} buffers={[]} systemColors={SYSTEM_COLORS} onDateClick={(d: Date) => { setDate(d); setView("daily"); }} onEventClick={handleEdit} onEventMove={(id: string, start: number, end: number) => updateEvent(id, { startTime: start, endTime: end })} />}
-          {view === "yearly" && <YearView date={date} events={events} buffers={[]} systemColors={SYSTEM_COLORS} onDateClick={(d: Date) => { setDate(d); setView("monthly"); }} onEventClick={handleEdit} />}
-          {view === "agenda" && <AgendaView date={date} events={events} buffers={[]} systemColors={SYSTEM_COLORS} onEventClick={handleEdit} />}
+        <VaultWarningBanner onSetupClick={() => setVaultSetupOpen(true)} />
+
+        <VaultSetupModal
+          isOpen={vaultSetupOpen}
+          onClose={() => setVaultSetupOpen(false)}
+          onSuccess={() => setVaultSetupOpen(false)}
+        />
+
+        <main className={cn(
+          "flex-1 overflow-auto",
+          isAnimating ? "opacity-0 animate-view-exit" : "animate-view-enter"
+        )}>
+          {view === "daily" && (
+            <DayView 
+              date={date} 
+              events={events} 
+              buffers={[]} 
+              systemColors={SYSTEM_COLORS} 
+              onSlotClick={handleSlotClick} 
+              onEventClick={handleEdit} 
+              onEventMove={(id: string, start: number, end: number) => updateEvent(id, { startTime: start, endTime: end })} 
+            />
+          )}
+          {view === "weekly" && (
+            <WeekView 
+              date={date} 
+              events={events} 
+              buffers={[]} 
+              systemColors={SYSTEM_COLORS} 
+              onSlotClick={handleSlotClick} 
+              onEventClick={handleEdit} 
+              onEventMove={(id: string, start: number, end: number) => updateEvent(id, { startTime: start, endTime: end })} 
+            />
+          )}
+          {view === "monthly" && (
+            <MonthView 
+              date={date} 
+              events={events} 
+              buffers={[]} 
+              systemColors={SYSTEM_COLORS} 
+              onDateClick={(d: Date) => { setDate(d); handleViewChange("daily"); }} 
+              onEventClick={handleEdit} 
+              onEventMove={(id: string, start: number, end: number) => updateEvent(id, { startTime: start, endTime: end })} 
+            />
+          )}
+          {view === "yearly" && (
+            <YearView 
+              date={date} 
+              events={events} 
+              buffers={[]} 
+              systemColors={SYSTEM_COLORS} 
+              onDateClick={(d: Date) => { setDate(d); handleViewChange("monthly"); }} 
+              onEventClick={handleEdit} 
+              onYearChange={(year) => setDate(new Date(year, 0, 1))}
+            />
+          )}
+          {view === "agenda" && (
+            <AgendaView 
+              date={date} 
+              events={events} 
+              buffers={[]} 
+              systemColors={SYSTEM_COLORS} 
+              onEventClick={handleEdit} 
+            />
+          )}
         </main>
       </div>
 

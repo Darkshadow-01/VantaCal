@@ -49,15 +49,15 @@ export function AgendaView({ date, events, systemColors, onEventClick }: AgendaV
   }, [allEvents]);
 
   return (
-    <div className="h-full overflow-auto bg-white dark:bg-[#1A1D24]">
+    <div className="h-full overflow-auto bg-[var(--bg-primary)]">
       <div className="max-w-3xl mx-auto py-6 px-4">
         {allEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-[#252830] flex items-center justify-center mb-4">
-              <CalendarDays className="w-10 h-10 text-gray-400" />
+            <div className="w-20 h-20 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center mb-4">
+              <CalendarDays className="w-10 h-10 text-[var(--text-muted)]" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No events scheduled</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Create an event to see it here</p>
+            <h3 className="text-lg font-serif tracking-tight text-[var(--text-primary)] mb-2">No events scheduled</h3>
+            <p className="text-sm text-[var(--text-muted)]">Create an event to see it here</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -71,61 +71,62 @@ export function AgendaView({ date, events, systemColors, onEventClick }: AgendaV
                     <h3 className={cn(
                       "text-sm font-medium",
                       isTodayGroup 
-                        ? "text-blue-600 dark:text-blue-400" 
+                        ? "text-[var(--accent)]" 
                         : isPastGroup 
-                          ? "text-gray-400 dark:text-gray-500"
-                          : "text-gray-700 dark:text-gray-300"
+                          ? "text-[var(--text-muted)]"
+                          : "text-[var(--text-secondary)]"
                     )}>
                       {label}
                     </h3>
                     <div className={cn(
-                      "flex- h-px",
-                      isTodayGroup ? "bg-blue-200 dark:bg-blue-800" : "bg-gray-200 dark:bg-[#333]"
+                      "flex-1 h-px",
+                      isTodayGroup ? "bg-[var(--accent)]/30" : "bg-[var(--border)]"
                     )} />
-                    <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#252830] px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-[var(--text-muted)] bg-[var(--bg-secondary)] px-2 py-0.5 rounded-full">
                       {dayEvents.length}
                     </span>
                   </div>
                   <div className="space-y-2">
                     {dayEvents.map((event) => {
-                      const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50", border: "border-blue-500", text: "text-blue-700", hover: "hover:bg-blue-50" };
+                      const systemColor = event.system === "Health" ? "bg-[#16A34A]" : event.system === "Work" ? "bg-[#2563EB]" : "bg-[#9333EA]";
                       
                       return (
                         <div
                           key={event.id}
-                          className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#252830] cursor-pointer transition-all duration-200 group"
+                          className="flex items-center gap-4 p-3 rounded-xl hover:bg-[var(--bg-secondary)] cursor-pointer transition-all duration-150 group hover-lift"
                           onClick={(e) => onEventClick?.(event, e)}
                         >
+                          {/* Time - Monospace for precision */}
                           <div className="w-14 flex-shrink-0">
                             <div className={cn(
-                              "text-sm font-semibold",
-                              isTodayGroup ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-200"
+                              "text-sm font-semibold font-mono",
+                              isTodayGroup ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
                             )}>
                               {event.startTime ? format(new Date(event.startTime), "h:mm") : "--"}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-[var(--text-muted)] font-mono">
                               {event.startTime ? format(new Date(event.startTime), "a") : ""}
                             </div>
                           </div>
-                          <div className={cn("w-1 h-10 rounded-full", colors.bg)} />
+                          <div className={cn("w-1 h-10 rounded-full", systemColor)} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900 dark:text-white truncate">
+                              <span className="font-medium text-[var(--text-primary)] truncate">
                                 {event.title}
                               </span>
                               {event.allDay && (
-                                <span className="text-xs text-gray-400 bg-gray-100 dark:bg-[#252830] px-1.5 py-0.5 rounded">
+                                <span className="text-xs text-[var(--text-muted)] bg-[var(--bg-secondary)] px-1.5 py-0.5 rounded">
                                   All day
                                 </span>
                               )}
                             </div>
                             {(event.location || event.description) && (
-                              <div className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                              <div className="text-sm text-[var(--text-muted)] truncate mt-0.5">
                                 {event.location || event.description}
                               </div>
                             )}
                           </div>
-                          <ChevronRight className="w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors" />
+                          <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors" />
                         </div>
                       );
                     })}

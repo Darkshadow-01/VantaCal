@@ -105,7 +105,7 @@ export function TimePicker({ value, onChange, label }: TimePickerProps) {
                 key={`${item.value}-${idx}`}
                 className={`flex items-center justify-center w-full h-[24px] text-sm transition-all duration-200 cursor-pointer select-none ${
                   item.isActive 
-                    ? "bg-[#5B8DEF] text-white font-semibold" 
+                    ? "bg-stone-600 text-white font-semibold" 
                     : item.value === hoursList[hoursList.indexOf(hours)] 
                       ? "text-white" 
                       : "text-gray-500"
@@ -150,7 +150,7 @@ export function TimePicker({ value, onChange, label }: TimePickerProps) {
                 key={`${item.value}-${idx}`}
                 className={`flex items-center justify-center w-full h-[24px] text-sm transition-all duration-200 cursor-pointer select-none ${
                   item.isActive 
-                    ? "bg-[#5B8DEF] text-white font-semibold" 
+                    ? "bg-stone-600 text-white font-semibold" 
                     : "text-gray-500"
                 }`}
                 style={{
@@ -180,7 +180,7 @@ export function TimePicker({ value, onChange, label }: TimePickerProps) {
             onClick={togglePeriod}
             className={`w-12 h-[54px] rounded-lg text-xs font-bold transition-colors ${
               period === "AM" 
-                ? "bg-[#5B8DEF] text-white" 
+                ? "bg-stone-600 text-white" 
                 : "bg-[#252830] text-gray-400 hover:text-white"
             }`}
           >
@@ -191,7 +191,7 @@ export function TimePicker({ value, onChange, label }: TimePickerProps) {
             onClick={togglePeriod}
             className={`w-12 h-[54px] rounded-lg text-xs font-bold transition-colors ${
               period === "PM" 
-                ? "bg-[#5B8DEF] text-white" 
+                ? "bg-stone-600 text-white" 
                 : "bg-[#252830] text-gray-400 hover:text-white"
             }`}
           >

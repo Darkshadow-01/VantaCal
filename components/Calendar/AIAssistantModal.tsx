@@ -140,7 +140,7 @@ export function AIAssistantModal({ isOpen, onClose, onAddEvent }: AIAssistantMod
       allDay: parsedEvent.allDay,
       type: "event",
       calendarId: "personal",
-      color: parsedEvent.system === "Health" ? "#3BA55D" : parsedEvent.system === "Work" ? "#5B8DEF" : "#EC4899",
+      color: parsedEvent.system === "Health" ? "#16A34A" : parsedEvent.system === "Work" ? "#1C1917" : "#9333EA",
     };
 
     if (parsedEvent.recurrence) {
@@ -161,23 +161,24 @@ export function AIAssistantModal({ isOpen, onClose, onAddEvent }: AIAssistantMod
   if (!isOpen) return null;
 
   const systemColors = {
-    Health: "bg-green-500",
-    Work: "bg-blue-500",
-    Relationships: "bg-purple-500",
+    Health: "bg-[#16A34A]",
+    Work: "bg-[var(--accent)]",
+    Relationships: "bg-[#9333EA]",
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleClose}>
-      <div className="bg-white dark:bg-[#1A1D24] rounded-xl w-full max-w-lg border border-gray-200 dark:border-[#333] shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#333]">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#5B8DEF] to-[#8B5CF6] rounded-lg flex items-center justify-center">
-              <Mic className="w-4 h-4 text-white" />
+      <div className="bg-[var(--bg-elevated)] rounded-xl w-full max-w-lg border border-[var(--border)] shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
+        {/* Header - Glass with sparkle */}
+        <div className="flex items-center justify-between p-4 border-b border-[var(--border)] bg-gradient-to-r from-[var(--bg-secondary)] to-[var(--bg-elevated)]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[var(--accent)]/10 rounded-lg flex items-center justify-center">
+              <Mic className="w-5 h-5 text-[var(--accent)]" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h2>
+            <h2 className="text-lg font-serif tracking-tight text-[var(--text-primary)]">AI Assistant</h2>
           </div>
-          <button onClick={handleClose} className="p-2 hover:bg-gray-100 dark:hover:bg-[#252830] rounded-lg transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={handleClose} className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale">
+            <X className="w-5 h-5 text-[var(--text-muted)]" />
           </button>
         </div>
 
@@ -189,14 +190,14 @@ export function AIAssistantModal({ isOpen, onClose, onAddEvent }: AIAssistantMod
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="e.g., Meeting with John tomorrow at 3pm"
-                className="w-full px-4 py-3 pr-12 bg-gray-100 dark:bg-[#252830] border border-transparent rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-[#5B8DEF]"
+                className="w-full px-4 py-3 pr-12 bg-[var(--bg-secondary)] border border-transparent rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-all"
               />
               <button
                 type="button"
                 onClick={startListening}
                 className={cn(
-                  "absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-colors",
-                  isListening ? "bg-red-500 text-white animate-pulse" : "text-gray-400 hover:text-gray-600"
+                  "absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-all duration-150",
+                  isListening ? "bg-[#EF4444] text-white animate-pulse" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                 )}
               >
                 <Mic className="w-4 h-4" />
@@ -205,14 +206,14 @@ export function AIAssistantModal({ isOpen, onClose, onAddEvent }: AIAssistantMod
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="px-4 py-2 bg-[#5B8DEF] text-white rounded-lg hover:bg-[#4A7EDE] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg hover-lift press-scale disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
             </button>
           </form>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 text-sm">
+            <div className="flex items-center gap-2 p-3 mb-4 bg-[var(--danger-light)] rounded-lg text-[var(--danger)] text-sm">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
@@ -220,19 +221,22 @@ export function AIAssistantModal({ isOpen, onClose, onAddEvent }: AIAssistantMod
 
           {parsedEvent && (
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 dark:bg-[#252830] rounded-lg space-y-3">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className={cn("px-2 py-0.5 rounded text-xs text-white", systemColors[parsedEvent.system])}>
+                  <span className={cn(
+                    "px-2 py-0.5 rounded text-xs text-white",
+                    parsedEvent.system === "Health" ? "bg-[#16A34A]" : parsedEvent.system === "Work" ? "bg-[#2563EB]" : "bg-[#9333EA]"
+                  )}>
                     {parsedEvent.system}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-[var(--text-muted)]">
                     Confidence: {Math.round(parsedEvent.confidence * 100)}%
                   </span>
                 </div>
 
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">{parsedEvent.title}</h3>
+                <h3 className="text-lg font-medium text-[var(--text-primary)]">{parsedEvent.title}</h3>
 
-                <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex flex-wrap gap-3 text-sm text-[var(--text-secondary)]">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     {parsedEvent.allDay ? "All day" : `${parsedEvent.startTime.hour.toString().padStart(2, '0')}:${parsedEvent.startTime.minute.toString().padStart(2, '0')}`}
@@ -250,20 +254,20 @@ export function AIAssistantModal({ isOpen, onClose, onAddEvent }: AIAssistantMod
                 </div>
 
                 {parsedEvent.reasoning && (
-                  <p className="text-xs text-gray-500 italic">{parsedEvent.reasoning}</p>
+                  <p className="text-xs text-[var(--text-muted)] italic">{parsedEvent.reasoning}</p>
                 )}
               </div>
 
               <div className="flex gap-2">
                 <button
                   onClick={handleAddToCalendar}
-                  className="flex-1 px-4 py-2 bg-[#5B8DEF] text-white rounded-lg hover:bg-[#4A7EDE] transition-colors"
+                  className="flex-1 px-4 py-2 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg hover-lift press-scale transition-all"
                 >
                   Add to Calendar
                 </button>
                 <button
                   onClick={() => setParsedEvent(null)}
-                  className="px-4 py-2 border border-gray-300 dark:border-[#333] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252830] transition-colors"
+                  className="px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] rounded-lg hover:bg-[var(--bg-secondary)] transition-all press-scale"
                 >
                   Try Again
                 </button>

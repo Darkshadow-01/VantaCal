@@ -79,8 +79,8 @@ function DroppableHour({ hour, onClick, children }: {
     <div
       ref={setNodeRef}
       onClick={onClick}
-      className={`h-[60px] relative border-b border-r border-gray-200 dark:border-gray-700 cursor-pointer transition-colors ${
-        isOver ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+      className={`h-[60px] relative border-b border-r border-[var(--border)] cursor-pointer transition-colors ${
+        isOver ? "bg-[var(--bg-secondary)]" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
       }`}
     >
       {children}
@@ -174,12 +174,12 @@ export function DayView({
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex h-full overflow-auto">
         {/* Time column */}
-        <div className="w-16 flex-shrink-0 border-r border-gray-200 dark:border-gray-700">
-          <div className="h-12 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center">
-            <Clock className="w-4 h-4 text-gray-400" />
+        <div className="w-16 flex-shrink-0 border-r border-[var(--border)]">
+          <div className="h-12 border-b border-[var(--border)] flex items-center justify-center">
+            <Clock className="w-4 h-4 text-[var(--text-muted)]" />
           </div>
           {HOURS.map((hour) => (
-            <div key={hour} className="h-[60px] text-xs text-gray-400 p-1 text-right pr-2">
+            <div key={hour} className="h-[60px] text-xs text-[var(--text-muted)] p-1 text-right pr-2">
               {hourLabels[hour]}
             </div>
           ))}
@@ -187,7 +187,7 @@ export function DayView({
 
         {/* Day column */}
         <div className="flex-1 relative">
-          <div className="h-12 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center">
+          <div className="h-12 border-b border-[var(--border)] flex items-center justify-center">
             <span className="text-lg font-medium">{format(date, "EEEE, MMMM d")}</span>
           </div>
 

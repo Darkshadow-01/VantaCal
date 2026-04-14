@@ -83,8 +83,8 @@ function DroppableHour({ day, hour, onClick, onDoubleClick, isCurrentHour, child
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        "h-16 border-b border-r border-gray-100 dark:border-[#333] cursor-pointer transition-colors relative",
-        isOver ? "bg-blue-50/50 dark:bg-blue-900/20" : "hover:bg-gray-50/50 dark:hover:bg-[#252830]/50"
+        "h-16 border-b border-r border-[var(--border)] cursor-pointer transition-colors relative",
+        isOver ? "bg-[var(--bg-secondary)]" : "hover:bg-[var(--bg-secondary)]/50"
       )}
     >
       {children}
@@ -106,7 +106,7 @@ export function WeekView({
 }: WeeklyViewProps) {
   const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null);
   
-  const weekStart = startOfWeek(date, { weekStartsOn: 0 });
+  const weekStart = startOfWeek(date);
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [weekStart]);
@@ -165,16 +165,16 @@ export function WeekView({
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex h-full overflow-auto bg-white dark:bg-[#1A1D24]">
+      <div className="flex h-full overflow-auto bg-[var(--bg-primary)]">
         {/* Week numbers column */}
-        <div className="w-10 flex-shrink-0 border-r border-gray-100 dark:border-[#333] bg-gray-50/50 dark:bg-[#1A1D24]">
-          <div className="h-16 border-b border-gray-100 dark:border-[#333] flex items-end justify-center pb-1">
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">Wk</span>
+        <div className="w-10 flex-shrink-0 border-r border-[var(--border)] bg-[var(--bg-secondary)]">
+          <div className="h-16 border-b border-[var(--border)] flex items-end justify-center pb-1">
+            <span className="text-[10px] text-[var(--text-muted)]">Wk</span>
           </div>
           {weekDays.map((day, idx) => {
             const weekNum = getWeek(day, { weekStartsOn: 0 });
             return (
-              <div key={idx} className="h-16 flex items-center justify-center text-xs font-medium text-gray-400 dark:text-gray-500">
+              <div key={idx} className="h-16 flex items-center justify-center text-xs font-medium text-[var(--text-muted)]">
                 {weekNum}
               </div>
             );
@@ -182,10 +182,10 @@ export function WeekView({
         </div>
 
         {/* Time column */}
-        <div className="w-12 flex-shrink-0 border-r border-gray-100 dark:border-[#333] bg-gray-50/50 dark:bg-[#1A1D24]">
-          <div className="h-16 border-b border-gray-100 dark:border-[#333]" />
+        <div className="w-12 flex-shrink-0 border-r border-[var(--border)] bg-[var(--bg-secondary)]">
+          <div className="h-16 border-b border-[var(--border)]" />
           {HOURS.map((hour) => (
-            <div key={hour} className="h-16 text-[10px] text-gray-400 dark:text-gray-500 pr-1 text-right leading-[4rem]">
+            <div key={hour} className="h-16 text-[10px] text-[var(--text-muted)] pr-1 text-right leading-[4rem]">
               {hourLabels[hour]}
             </div>
           ))}
@@ -200,20 +200,20 @@ export function WeekView({
             const dayEventColumns = useMemo(() => calculateEventColumns(dayEvents), [dayEvents]);
 
             return (
-              <div key={dayIndex} className="flex-1 min-w-[120px] border-r border-gray-100 dark:border-[#333]">
+              <div key={dayIndex} className="flex-1 min-w-[120px] border-r border-[var(--border)]">
                 {/* Day header */}
                 <div className={cn(
                   "h-16 flex flex-col items-center justify-center border-b transition-colors",
-                  isCurrentDay ? "bg-blue-50/50 dark:bg-blue-900/20" : ""
+                  isCurrentDay ? "bg-[var(--bg-secondary)]" : ""
                 )}>
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  <span className="text-xs font-medium text-[var(--text-secondary)]">
                     {format(day, "EEE")}
                   </span>
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mt-1 transition-all duration-300",
                     isCurrentDay 
-                      ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" 
-                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#252830]"
+                      ? "bg-[var(--accent)] text-[var(--accent-contrast)]" 
+                      : "text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                   )}>
                     {format(day, "d")}
                   </div>
@@ -253,7 +253,7 @@ export function WeekView({
                     const eventWidth = usableWidth / colInfo.totalColumns;
                     const leftPos = colInfo.column * (eventWidth + gap);
                     
-                    const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50", border: "border-blue-500", text: "text-blue-700", hover: "hover:bg-blue-50" };
+                    const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-[var(--accent)]", bgLight: "bg-[var(--bg-secondary)]", border: "border-[var(--accent)]", text: "text-[var(--text-primary)]", hover: "hover:bg-[var(--bg-secondary)]" };
 
                     return (
                       <div
@@ -294,7 +294,7 @@ export function WeekView({
         {activeEvent && (
           <div className={cn(
             "px-3 py-2 rounded-lg text-sm font-medium text-white shadow-xl z-50",
-            systemColors[activeEvent.system as keyof typeof systemColors]?.bg || "bg-blue-500"
+            systemColors[activeEvent.system as keyof typeof systemColors]?.bg || "bg-[var(--accent)]"
           )}>
             {activeEvent.title}
           </div>

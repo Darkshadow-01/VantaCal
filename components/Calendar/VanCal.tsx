@@ -16,7 +16,6 @@ import { AIAssistantModal } from "./AIAssistantModal";
 import { useEvents } from "@/hooks/useEvents";
 import { useSettings } from "@/hooks/useSettings";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { VaultWarningBanner } from "./VaultStatusBadge";
 import { VaultSetupModal } from "./VaultSetupModal";
 import type { CalendarEvent } from "@/src/domain/calendar/event";
 import { cn } from "@/lib/utils";
@@ -427,8 +426,6 @@ export function VanCal() {
           onClose={() => setAiAssistantOpen(false)}
           onAddEvent={(event) => createEvent(event as any)}
         />
-
-        <VaultWarningBanner onSetupClick={() => setVaultSetupOpen(true)} />
 
         <VaultSetupModal
           isOpen={vaultSetupOpen}

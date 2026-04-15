@@ -9,10 +9,10 @@ const TAGLINE = "Balance your life across";
 
 export default function Home() {
   const [wordIndex, setWordIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    setIsVisible(true);
+    // No need to set state - initialized above
   }, []);
 
   useEffect(() => {

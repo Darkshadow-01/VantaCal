@@ -32,10 +32,29 @@ interface EncryptedEventDoc {
   updatedAt: number;
 }
 
+function getInitialVisibility() {
+  try {
+    const saved = localStorage.getItem(CALENDARS_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const visibility: Record<string, boolean> = {};
+      parsed.forEach((cal: Calendar) => {
+        visibility[cal.id] = cal.visible;
+      });
+      return visibility;
+    }
+  } catch { /* ignore */ }
+  const defaultVisibility: Record<string, boolean> = {};
+  DEFAULT_CALENDARS.forEach(cal => {
+    defaultVisibility[cal.id] = cal.visible;
+  });
+  return defaultVisibility;
+}
+
 export function useCalendarEvents(userId?: string | null) {
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [calendarVisibility, setCalendarVisibility] = useState<Record<string, boolean>>({});
+  const [calendarVisibility, setCalendarVisibility] = useState<Record<string, boolean>>(() => getInitialVisibility());
 
   const encryptedEvents = useQuery(api.events.index.getEvents, userId ? { userId } : "skip");
   const createEncryptedEvent = useMutation(api.events.index.createEvent);
@@ -43,29 +62,7 @@ export function useCalendarEvents(userId?: string | null) {
   const deleteEncryptedEvent = useMutation(api.events.index.deleteEvent);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(CALENDARS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const visibility: Record<string, boolean> = {};
-        parsed.forEach((cal: Calendar) => {
-          visibility[cal.id] = cal.visible;
-        });
-        setCalendarVisibility(visibility);
-      } else {
-        const defaultVisibility: Record<string, boolean> = {};
-        DEFAULT_CALENDARS.forEach(cal => {
-          defaultVisibility[cal.id] = cal.visible;
-        });
-        setCalendarVisibility(defaultVisibility);
-      }
-    } catch {
-      const defaultVisibility: Record<string, boolean> = {};
-      DEFAULT_CALENDARS.forEach(cal => {
-        defaultVisibility[cal.id] = cal.visible;
-      });
-      setCalendarVisibility(defaultVisibility);
-    }
+    // State is now initialized lazily - this just handles future updates if needed
   }, []);
 
   const decryptEvent = useCallback(async (encrypted: EncryptedEventDoc): Promise<CalendarEvent | null> => {

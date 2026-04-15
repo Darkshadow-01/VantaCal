@@ -32,24 +32,24 @@ interface SystemColors {
 const SYSTEM_COLORS: Record<"Health" | "Work" | "Relationships", SystemColors> = {
   Health: { 
     bg: "bg-[#16A34A]", 
-    bgLight: "bg-[#DCFCE7] dark:bg-[#16A34A]/20", 
+    bgLight: "bg-[#DCFCE7] dark:bg-[#16A34A]/30", 
     border: "border-[#16A34A]", 
     text: "text-[#16A34A] dark:text-[#4ADE80]", 
-    hover: "hover:bg-[#DCFCE7] dark:hover:bg-[#16A34A]/30" 
+    hover: "hover:bg-[#DCFCE7] dark:hover:bg-[#16A34A]/40" 
   },
   Work: { 
-    bg: "bg-[var(--accent)]", 
-    bgLight: "bg-[var(--bg-secondary)] dark:bg-[var(--accent)]/20", 
-    border: "border-[var(--accent)]", 
-    text: "text-[var(--text-primary)] dark:text-[var(--accent)]", 
-    hover: "hover:bg-[var(--bg-secondary)] dark:hover:bg-[var(--accent)]/30" 
+    bg: "bg-[#374151]", 
+    bgLight: "bg-[#F3F4F6] dark:bg-[#374151]/30", 
+    border: "border-[#374151]", 
+    text: "text-[#374151] dark:text-[#D1D5DB]", 
+    hover: "hover:bg-[#F3F4F6] dark:hover:bg-[#374151]/40" 
   },
   Relationships: { 
     bg: "bg-[#9333EA]", 
-    bgLight: "bg-[#F3E8FF] dark:bg-[#9333EA]/20", 
+    bgLight: "bg-[#F3E8FF] dark:bg-[#9333EA]/30", 
     border: "border-[#9333EA]", 
     text: "text-[#9333EA] dark:text-[#C084FC]", 
-    hover: "hover:bg-[#F3E8FF] dark:hover:bg-[#9333EA]/30" 
+    hover: "hover:bg-[#F3E8FF] dark:hover:bg-[#9333EA]/40" 
   },
 };
 

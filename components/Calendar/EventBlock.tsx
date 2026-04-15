@@ -69,11 +69,19 @@ export function EventBlock({
     );
   }
 
+  const getEventBg = () => {
+    switch (event.system) {
+      case "Health": return "#16A34A";
+      case "Work": return "#374151";
+      case "Relationships": return "#9333EA";
+      default: return "#57534E";
+    }
+  };
+
   return (
     <div
       className={`
-        absolute left-1 right-1 ${systemColors.bg} text-white
-        px-3 py-1.5 rounded-lg cursor-pointer
+        absolute left-1 right-1 rounded-lg cursor-pointer
         transition-all shadow-md overflow-hidden
         hover:shadow-lg hover:scale-[1.01] hover:translate-x-0.5
         ${showBuffer ? "border-l-4" : ""}
@@ -82,7 +90,8 @@ export function EventBlock({
         top: style?.top || "0",
         height: style?.height || "100%",
         minHeight: "28px",
-        borderLeftColor: getBorderColor(),
+        backgroundColor: getEventBg(),
+        borderLeftColor: getEventBg(),
       }}
       onClick={onClick}
       onMouseEnter={() => setShowTooltip(true)}

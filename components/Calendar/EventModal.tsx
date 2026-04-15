@@ -226,10 +226,10 @@ export function EventModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-2 space-y-2">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {!showAiInput && (
-            <button type="button" onClick={() => setShowAiInput(true)} className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-              <Sparkles className="w-2.5 h-2.5" />Add with AI
+            <button type="button" onClick={() => setShowAiInput(true)} className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+              <Sparkles className="w-3 h-3" />Add with AI
             </button>
           )}
 
@@ -258,31 +258,38 @@ export function EventModal({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Add title"
-              className="w-full text-base font-serif bg-transparent border-b border-[var(--border)] focus:border-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] text-[var(--text-primary)] p-0 py-1"
+              placeholder="Add title..."
+              className="w-full text-lg font-semibold bg-transparent border-b-2 border-[var(--border)] focus:border-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] text-[var(--text-primary)] py-2"
               autoFocus
             />
           </div>
 
           {/* System Selection */}
           <div>
-            <div className="grid grid-cols-3 gap-2">
-              {(["Health", "Work", "Relationships"] as const).map((sys) => (
-                <button
-                  key={sys}
-                  type="button"
-                  onClick={() => { setSystem(sys); setCustomColor(undefined); }}
-                  className={cn(
-                    "p-2.5 rounded-xl border-2 transition-all duration-200 text-center group",
-                    system === sys && !customColor
-                      ? `${systemColors[sys].border} ${systemColors[sys].bgLight}`
-                      : "border-[var(--border)] hover:border-[var(--text-muted)] hover:scale-[1.02] active:scale-[0.98]"
-                  )}
-                >
-                  <div className={cn("w-3 h-3 rounded-full mx-auto mb-1.5 transition-transform", systemColors[sys].bg, system === sys && !customColor && "scale-110")} />
-                  <span className={cn("text-xs font-medium", system === sys && !customColor ? systemColors[sys].text : "text-[var(--text-secondary)]")}>{sys}</span>
-                </button>
-              ))}
+            <div className="grid grid-cols-3 gap-3">
+              {(["Health", "Work", "Relationships"] as const).map((sys) => {
+                const bgColor = sys === "Health" ? "#16A34A" : sys === "Relationships" ? "#9333EA" : "#374151";
+                const isSelected = system === sys && !customColor;
+                return (
+                  <button
+                    key={sys}
+                    type="button"
+                    onClick={() => { setSystem(sys); setCustomColor(undefined); }}
+                    className={cn(
+                      "p-3 rounded-xl border-2 transition-all duration-200 text-center",
+                      isSelected 
+                        ? "border-[var(--text-primary)] bg-[var(--bg-secondary)]" 
+                        : "border-[var(--border)] hover:border-[var(--text-muted)] hover:scale-[1.02] active:scale-[0.98]"
+                    )}
+                  >
+                    <div 
+                      className={cn("w-4 h-4 rounded-full mx-auto mb-2 transition-transform", isSelected && "scale-125")} 
+                      style={{ backgroundColor: bgColor }}
+                    />
+                    <span className={cn("text-sm font-semibold", isSelected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]")}>{sys}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

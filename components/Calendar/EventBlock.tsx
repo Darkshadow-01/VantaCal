@@ -136,9 +136,9 @@ export function EventBlock({
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-1 h-full">
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <p className="font-semibold text-sm truncate leading-tight text-white">{event.title}</p>
+<div className="flex items-start justify-between gap-1 h-full px-2">
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <p className="font-semibold text-sm truncate leading-tight text-white drop-shadow-md">{event.title}</p>
           {!compact && (
             <p className="text-xs opacity-90 mt-0.5 font-medium">
               {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}

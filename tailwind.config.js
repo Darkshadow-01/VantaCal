@@ -93,6 +93,13 @@ module.exports = {
         },
       },
       
+      // Font family
+      fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-serif)', 'system-ui', 'serif'],
+        mono: ['var(--font-mono)', 'monospace'],
+      },
+
       // Typography
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1rem' }],

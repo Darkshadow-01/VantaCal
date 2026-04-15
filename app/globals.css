@@ -202,11 +202,11 @@ body {
    ======================== */
 
 .font-serif {
-  font-family: "DejaVu Sans", var(--font-serif), system-ui, sans-serif;
+  font-family: var(--font-serif), system-ui, serif;
 }
 
 .font-sans {
-  font-family: "DejaVu Sans", var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
 .font-mono {

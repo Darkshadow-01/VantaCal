@@ -181,7 +181,7 @@ const DayCell = memo(function DayCell({
               key={event.id}
               onClick={(e) => { e.stopPropagation(); onEventClick?.(event, e); }}
               className={cn(
-                "w-full text-[9px] px-1.5 py-0.5 rounded truncate text-left transition-all duration-150 hover:scale-[1.02] font-sans",
+                "w-full text-[10px] px-1.5 py-0.5 rounded truncate text-left transition-all duration-150 hover:scale-[1.02] font-medium font-sans",
                 colors.bgLight,
                 colors.text,
                 "border-l-2",

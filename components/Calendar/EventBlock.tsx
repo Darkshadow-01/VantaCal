@@ -74,8 +74,8 @@ export function EventBlock({
       className={`
         absolute left-1 right-1 ${systemColors.bg} text-white
         px-3 py-1.5 rounded-lg cursor-pointer
-        hover:opacity-90 transition-all shadow-md overflow-hidden
-        hover:scale-[1.01] hover:translate-x-0.5
+        transition-all shadow-md overflow-hidden
+        hover:shadow-lg hover:scale-[1.01] hover:translate-x-0.5
         ${showBuffer ? "border-l-4" : ""}
       `}
       style={{
@@ -128,10 +128,10 @@ export function EventBlock({
       )}
 
       <div className="flex items-start justify-between gap-1 h-full">
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate leading-tight">{event.title}</p>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <p className="font-semibold text-sm truncate leading-tight text-white">{event.title}</p>
           {!compact && (
-            <p className="text-xs opacity-80 mt-0.5">
+            <p className="text-xs opacity-90 mt-0.5 font-medium">
               {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
             </p>
           )}

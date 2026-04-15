@@ -4,20 +4,20 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Light Mode - Warm Monochrome (Stone) */
-  --bg-primary: #FAFAF9;
-  --bg-secondary: #F5F5F4;
-  --bg-elevated: #FFFFFF;
+  /* Light Mode - Modern Minimalist (Grayscale) */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #D3D3D3;
+  --bg-elevated: #FAFAFA;
   
-  --text-primary: #1C1917;
-  --text-secondary: #57534E;
-  --text-muted: #A8A29E;
+  --text-primary: #36454F;
+  --text-secondary: #708090;
+  --text-muted: #A8A8A8;
   
-  --accent: #1C1917;
+  --accent: #36454F;
   --accent-contrast: #FFFFFF;
   
-  --border: #E7E5E4;
-  --border-subtle: #F5F5F4;
+  --border: #D3D3D3;
+  --border-subtle: #E8E8E8;
   
   /* System Colors */
   --system-health: #16A34A;
@@ -72,20 +72,20 @@
 }
 
 .dark {
-  /* Dark Mode - True Luxury */
-  --bg-primary: #0C0A09;
-  --bg-secondary: #1C1917;
-  --bg-elevated: #292524;
+  /* Dark Mode - Modern Minimalist */
+  --bg-primary: #36454F;
+  --bg-secondary: #2D3A44;
+  --bg-elevated: #485963;
   
-  --text-primary: #FAFAF9;
-  --text-secondary: #A8A29E;
-  --text-muted: #78716C;
+  --text-primary: #FFFFFF;
+  --text-secondary: #D3D3D3;
+  --text-muted: #A8A8A8;
   
-  --accent: #FAFAF9;
-  --accent-contrast: #0C0A09;
+  --accent: #FFFFFF;
+  --accent-contrast: #36454F;
   
-  --border: #292524;
-  --border-subtle: #1C1917;
+  --border: #485963;
+  --border-subtle: #36454F;
   
   /* Semantic */
   --danger: #F87171;
@@ -202,15 +202,15 @@ body {
    ======================== */
 
 .font-serif {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: "DejaVu Sans", var(--font-serif), system-ui, sans-serif;
 }
 
 .font-sans {
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: "DejaVu Sans", var(--font-sans), system-ui, sans-serif;
 }
 
 .font-mono {
-  font-family: var(--font-mono), monospace;
+  font-family: "DejaVu Sans", var(--font-mono), monospace;
 }
 
 /* ========================

@@ -137,7 +137,7 @@ export function EventBlock({
       )}
 
 <div className="flex items-start justify-between gap-1 h-full px-2">
-          <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex-1 min-w-0 overflow-hidden cursor-pointer" onClick={(e) => { e.stopPropagation(); onClick(e); }}>
             <p className="font-semibold text-sm truncate leading-tight text-white drop-shadow-md">{event.title}</p>
           {!compact && (
             <p className="text-xs opacity-90 mt-0.5 font-medium">
@@ -146,20 +146,21 @@ export function EventBlock({
           )}
         </div>
 
-        {/* Menu Button */}
+        {/* Three dot menu */}
         <div className="relative flex-shrink-0">
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               setShowMenu(!showMenu);
             }}
             className="p-1 hover:bg-white/20 rounded transition-colors"
           >
-            <MoreVertical className="w-3 h-3" />
+            <MoreVertical className="w-4 h-4 text-white" />
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700 py-1 z-20 min-w-[120px]">
+            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 py-1 z-30 min-w-[140px]">
               <button
                 onClick={(e) => {
                   e.stopPropagation();

@@ -1,13 +1,17 @@
+"use client";
+
 import { VanCal } from "@/components/Calendar/VanCal";
-import { AIChatInput } from "@/components/AIChatInput";
+import { motion } from "framer-motion";
 
 export default function CalendarPage() {
   return (
-    <div className="relative">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="relative"
+    >
       <VanCal />
-      <div className="absolute bottom-4 right-4 z-40 w-80">
-        <AIChatInput />
-      </div>
-    </div>
+    </motion.div>
   );
 }

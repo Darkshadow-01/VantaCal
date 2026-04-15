@@ -39,6 +39,15 @@ export function EventBlock({
   const isValidTime = !isNaN(startTime.getTime()) && !isNaN(endTime.getTime());
   const durationMinutes = isValidTime ? (endTime.getTime() - startTime.getTime()) / (1000 * 60) : 60;
 
+  const getBorderColor = () => {
+    switch (event.system) {
+      case "Health": return "#16A34A";
+      case "Work": return "#2563EB";
+      case "Relationships": return "#9333EA";
+      default: return "#57534E";
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("eventId", event.id);
     e.dataTransfer.effectAllowed = "move";
@@ -46,17 +55,17 @@ export function EventBlock({
 
   if (compact) {
     return (
-      <div
+      <button
         className={`
           ${systemColors.bg} text-white px-2 py-1 rounded text-xs truncate cursor-pointer
-          hover:opacity-90 transition-opacity shadow-sm
+          hover:opacity-90 transition-opacity shadow-sm hover:scale-[1.02] active:scale-[0.98]
         `}
         onClick={onClick}
         draggable
         onDragStart={handleDragStart}
       >
         {event.title}
-      </div>
+      </button>
     );
   }
 
@@ -64,15 +73,16 @@ export function EventBlock({
     <div
       className={`
         absolute left-1 right-1 ${systemColors.bg} text-white
-        px-2 py-1 rounded-md cursor-pointer
+        px-3 py-1.5 rounded-lg cursor-pointer
         hover:opacity-90 transition-all shadow-md overflow-hidden
+        hover:scale-[1.01] hover:translate-x-0.5
         ${showBuffer ? "border-l-4" : ""}
       `}
       style={{
         top: style?.top || "0",
         height: style?.height || "100%",
-        minHeight: "24px",
-        borderLeftColor: "rgba(255, 255, 255, 0.3)",
+        minHeight: "28px",
+        borderLeftColor: getBorderColor(),
       }}
       onClick={onClick}
       onMouseEnter={() => setShowTooltip(true)}

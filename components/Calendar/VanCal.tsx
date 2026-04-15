@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { format, subMonths, addMonths, subWeeks, addWeeks, subDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus, Search, Calendar as CalendarIcon, Download, Upload, Settings, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Calendar as CalendarIcon, Download, Settings, Sparkles, Menu } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
 import { MonthView } from "./MonthView";
@@ -160,6 +161,7 @@ export function VanCal() {
   const [vaultSetupOpen, setVaultSetupOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: Date; hour?: number } | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { events, createEvent, updateEvent, deleteEvent } = useEvents();
   const { settings, updateSetting } = useSettings();
@@ -291,110 +293,158 @@ export function VanCal() {
   return (
     <div className="h-screen flex bg-[var(--bg-primary)]">
       {/* Left Sidebar - Glass Morphism */}
-      <aside className="w-72 border-r border-[var(--border)] p-4 flex flex-col gap-4 glass-light overflow-hidden">
-        <div className="flex items-center gap-2 px-2">
-          <CalendarIcon className="w-5 h-5 text-[var(--text-primary)]" />
-          <span className="text-xl font-serif tracking-tight text-[var(--text-primary)]">VanCal</span>
-        </div>
-        
-        <MiniCalendar 
-          currentDate={date} 
-          selectedDate={date} 
-          events={events} 
-          onDateSelect={(d) => { setDate(d); handleViewChange("daily"); }} 
-        />
-        
-        {/* Quick Actions */}
-        <div className="space-y-2">
-          <button
-            onClick={handleCreate}
-            className="w-full flex items-center gap-3 px-3 py-2.5 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg hover-lift shadow-sm transition-all duration-150 press-scale"
+      <AnimatePresence mode="wait">
+        {!sidebarCollapsed && (
+          <motion.aside
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 280, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="border-r border-[var(--border)] p-4 flex flex-col gap-4 glass-light overflow-hidden"
           >
-            <Plus className="w-4 h-4" />
-            <span className="text-sm font-medium">New Event</span>
-          </button>
-        </div>
-      </aside>
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-[var(--text-primary)]" />
+                <span className="text-xl font-serif tracking-tight text-[var(--text-primary)]">VanCal</span>
+              </div>
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="p-1 hover:bg-[var(--bg-secondary)] rounded transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-[var(--text-muted)]" />
+              </button>
+            </div>
+            
+            <MiniCalendar 
+              currentDate={date} 
+              selectedDate={date} 
+              events={events} 
+              onDateSelect={(d) => { setDate(d); handleViewChange("daily"); }} 
+            />
+            
+            {/* Quick Actions */}
+            <div className="space-y-2">
+              <button
+                onClick={handleCreate}
+                className="w-full flex items-center gap-3 px-3 py-2.5 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg hover-lift shadow-sm transition-all duration-150 press-scale"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-medium">New Event</span>
+              </button>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Collapsed Sidebar Toggle */}
+      {sidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          className="absolute left-4 top-4 z-10 p-2 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+        >
+          <Menu className="w-5 h-5 text-[var(--text-primary)]" />
+        </button>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-primary)]">
-          <div className="flex items-center gap-4">
-            {/* View Tabs - Underline indicator */}
-            <div className="flex items-center bg-[var(--bg-secondary)] rounded-lg p-1">
-              {viewTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleViewChange(tab.id)}
-                  className={cn(
-                    "relative px-3 py-1.5 text-sm rounded-md transition-all duration-150",
-                    view === tab.id 
-                      ? "text-[var(--text-primary)]" 
-                      : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                  )}
-                >
-                  {tab.label}
-                  {view === tab.id && (
-                    <span className="absolute bottom-0 left-1 right-1 h-0.5 bg-[var(--accent)] rounded-full animate-scale-in" />
-                  )}
-                </button>
-              ))}
-            </div>
-            
+        <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+          <div className="flex items-center gap-6">
             {/* Navigation */}
             <div className="flex items-center gap-1">
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handlePrev} 
-                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale"
+                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150"
               >
                 <ChevronLeft className="w-5 h-5 text-[var(--text-secondary)]" />
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleToday} 
-                className="px-3 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 font-medium press-scale"
+                className="px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150"
               >
                 Today
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleNext} 
-                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale"
+                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150"
               >
                 <ChevronRight className="w-5 h-5 text-[var(--text-secondary)]" />
-              </button>
-              <span className="ml-2 text-lg font-serif text-[var(--text-primary)] tracking-tight">{dateLabel}</span>
+              </motion.button>
+              <span className="ml-3 text-xl font-serif text-[var(--text-primary)] tracking-tight">{dateLabel}</span>
             </div>
+          </div>
+
+          {/* View Tabs - Pill indicator */}
+          <div className="flex items-center gap-1 bg-[var(--bg-secondary)] rounded-full p-1">
+            {viewTabs.map((tab) => (
+              <motion.button
+                key={tab.id}
+                onClick={() => handleViewChange(tab.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200",
+                  view === tab.id 
+                    ? "text-[var(--accent-contrast)]" 
+                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                )}
+              >
+                {view === tab.id && (
+                  <motion.span
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-[var(--accent)] rounded-full"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{tab.label}</span>
+              </motion.button>
+            ))}
           </div>
           
           {/* Actions */}
-          <div className="flex items-center gap-1">
-            <button 
+          <div className="flex items-center gap-2">
+            <motion.button 
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => setSearchOpen(!searchOpen)} 
-              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              className="p-2.5 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150" 
               title="Search (Ctrl+F)"
             >
               <Search className="w-5 h-5 text-[var(--text-muted)]" />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => setImportExportOpen(true)} 
-              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              className="p-2.5 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150" 
               title="Import/Export"
             >
               <Download className="w-5 h-5 text-[var(--text-muted)]" />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => setAiAssistantOpen(true)} 
-              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              className="p-2.5 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150" 
               title="AI Assistant (Ctrl+Shift+A)"
             >
               <Sparkles className="w-5 h-5 text-[var(--text-muted)]" />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => setSettingsOpen(true)} 
-              className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150 press-scale" 
+              className="p-2.5 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150" 
               title="Settings"
             >
               <Settings className="w-5 h-5 text-[var(--text-muted)]" />
-            </button>
+            </motion.button>
           </div>
         </header>
 

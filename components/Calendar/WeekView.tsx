@@ -125,6 +125,14 @@ export function WeekView({
     return map;
   }, [events, weekDays]);
 
+  const eventColumnsByDay = useMemo(() => {
+    const columnsMap = new Map<string, Map<string, { column: number; totalColumns: number }>>();
+    for (const [dayKey, dayEvents] of eventsByDay) {
+      columnsMap.set(dayKey, calculateEventColumns(dayEvents));
+    }
+    return columnsMap;
+  }, [eventsByDay]);
+
   const currentHour = new Date().getHours();
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -197,7 +205,7 @@ export function WeekView({
             const isCurrentDay = isToday(day);
             const dayKey = format(day, "yyyy-MM-dd");
             const dayEvents = eventsByDay.get(dayKey) || [];
-            const dayEventColumns = useMemo(() => calculateEventColumns(dayEvents), [dayEvents]);
+            const dayEventColumns = eventColumnsByDay.get(dayKey) || new Map();
 
             return (
               <div key={dayIndex} className="flex-1 min-w-[120px] border-r border-[var(--border)]">
@@ -253,7 +261,7 @@ export function WeekView({
                     const eventWidth = usableWidth / colInfo.totalColumns;
                     const leftPos = colInfo.column * (eventWidth + gap);
                     
-                    const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-[var(--accent)]", bgLight: "bg-[var(--bg-secondary)] dark:bg-[var(--accent)]/20", border: "border-[var(--accent)]", text: "text-[var(--text-primary)] dark:text-[var(--accent)]", hover: "hover:bg-[var(--bg-secondary)] dark:hover:bg-[var(--accent)]/30" };
+                    const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-[var(--accent)]", bgLight: "bg-[var(--bg-secondary)] dark:bg-[var(--accent)]/60", border: "border-[var(--accent)]", text: "text-[var(--text-primary)] dark:text-[var(--accent)]", hover: "hover:bg-[var(--bg-secondary)] dark:hover:bg-[var(--accent)]/70" };
 
                     return (
                       <div

@@ -99,7 +99,7 @@ function DraggableEvent({ event, systemColors, onClick }: {
     >
       <EventBlock 
         event={event} 
-        systemColors={systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50 dark:bg-blue-500/20", border: "border-blue-500", text: "text-blue-700 dark:text-blue-400", hover: "hover:bg-blue-50 dark:hover:bg-blue-500/30" }}
+                systemColors={systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50 dark:bg-blue-500/60", border: "border-blue-500", text: "text-blue-700 dark:text-blue-400", hover: "hover:bg-blue-50 dark:hover:bg-blue-500/70" }}
         onClick={handleClick}
         style={{ top: "0px", height: `${height}px` }}
       />

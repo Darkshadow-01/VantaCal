@@ -35,9 +35,9 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
       onClick={onClose}
     >
       <div 
-        className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-lg border border-[var(--border)] shadow-2xl overflow-hidden animate-scale-in"
+        className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-2xl border border-[var(--border)] shadow-2xl overflow-hidden animate-scale-in"
         onClick={e => e.stopPropagation()}
-        style={{ maxHeight: "85vh" }}
+        style={{ height: "70vh", maxHeight: "700px" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
@@ -50,7 +50,7 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
           </button>
         </div>
 
-        <div className="flex" style={{ height: "calc(85vh - 73px)" }}>
+        <div className="flex" style={{ height: "calc(70vh - 73px)", maxHeight: "627px" }}>
           {/* Sidebar */}
           <div className="w-44 border-r border-[var(--border)] p-3 space-y-1 bg-[var(--bg-secondary)]/30">
             {tabs.map(tab => (

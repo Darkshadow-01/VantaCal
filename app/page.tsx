@@ -12,10 +12,6 @@ export default function Home() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // No need to set state - initialized above
-  }, []);
-
-  useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((prev) => (prev + 1) % WORDS.length);
     }, 2500);

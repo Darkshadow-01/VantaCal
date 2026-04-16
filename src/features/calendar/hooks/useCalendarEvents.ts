@@ -36,12 +36,16 @@ function getInitialVisibility() {
   try {
     const saved = localStorage.getItem(CALENDARS_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      const visibility: Record<string, boolean> = {};
-      parsed.forEach((cal: Calendar) => {
-        visibility[cal.id] = cal.visible;
-      });
-      return visibility;
+      try {
+        const parsed = JSON.parse(saved);
+        const visibility: Record<string, boolean> = {};
+        parsed.forEach((cal: Calendar) => {
+          visibility[cal.id] = cal.visible;
+        });
+        return visibility;
+      } catch {
+        // ignore parse errors
+      }
     }
   } catch { /* ignore */ }
   const defaultVisibility: Record<string, boolean> = {};
@@ -60,10 +64,6 @@ export function useCalendarEvents(userId?: string | null) {
   const createEncryptedEvent = useMutation(api.events.index.createEvent);
   const updateEncryptedEvent = useMutation(api.events.index.updateEvent);
   const deleteEncryptedEvent = useMutation(api.events.index.deleteEvent);
-
-  useEffect(() => {
-    // State is now initialized lazily - this just handles future updates if needed
-  }, []);
 
   const decryptEvent = useCallback(async (encrypted: EncryptedEventDoc): Promise<CalendarEvent | null> => {
     if (!hasMasterKey()) {

@@ -31,7 +31,7 @@ const params = {
     // - Colors: palette arrays
 
     seed: 12345,
-    // define colorPalette as an array -- choose whatever colors you'd like ['#d97757', '#6a9bcc', '#788c5d', '#b0aea5']
+    colorPalette: ['#d97757', '#6a9bcc', '#788c5d', '#b0aea5'],
     // Add YOUR parameters here based on your algorithm
 };
 

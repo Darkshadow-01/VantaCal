@@ -284,7 +284,7 @@ export function DayView({
                   key={event.id}
                   onClick={(e) => { e.stopPropagation(); onEventClick?.(event, e); }}
                   className={cn(
-                    "absolute rounded-md px-2 py-1 cursor-pointer transition-all duration-200 hover:shadow-md z-10",
+                    "absolute rounded-md px-2 py-1 cursor-pointer transition-all duration-200 hover:shadow-md z-20",
                     colors.bgLight,
                     colors.text,
                     `border-l-2 ${colors.border.replace("border-", "border-l-")}`

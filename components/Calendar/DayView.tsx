@@ -8,6 +8,7 @@ import { EventBlock } from "./EventBlock";
 import type { CalendarEvent } from "@/lib/types";
 import type { BufferBlock } from "@/lib/schedulerWithBuffers";
 import { expandRecurringEvents, type EventWithRecurrence } from "@/src/features/calendar";
+import { cn } from "@/lib/utils";
 
 interface DailyViewProps {
   date: Date;
@@ -22,6 +23,42 @@ interface DailyViewProps {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+function calculateEventColumns(events: CalendarEvent[]): Map<string, { column: number; totalColumns: number }> {
+  const result = new Map<string, { column: number; totalColumns: number }>();
+  
+  if (events.length === 0) return result;
+  
+  const sortedEvents = [...events]
+    .filter(e => e.startTime && e.endTime)
+    .sort((a, b) => a.startTime! - b.startTime!);
+  
+  const placed: CalendarEvent[] = [];
+  
+  for (const event of sortedEvents) {
+    const eventKey = event.id;
+    const startTime = event.startTime!;
+    const endTime = event.endTime!;
+    
+    let column = 0;
+    for (let i = 0; i < placed.length; i++) {
+      const placedEvent = placed[i];
+      const placedStart = placedEvent.startTime!;
+      const placedEnd = placedEvent.endTime!;
+      
+      if (startTime >= placedEnd || endTime <= placedStart) {
+        column = i;
+        break;
+      }
+      column = i + 1;
+    }
+    
+    placed.splice(column, 0, event);
+    result.set(eventKey, { column, totalColumns: placed.length });
+  }
+  
+  return result;
+}
 
 function DraggableEvent({ event, systemColors, onClick }: { 
   event: CalendarEvent; 
@@ -155,6 +192,10 @@ export function DayView({
     onEventMove(eventData.id, newStartTime.getTime(), newEndTime.getTime());
   };
 
+  const eventColumns = useMemo(() => {
+    return calculateEventColumns(dayEvents);
+  }, [dayEvents]);
+
   const currentTimePosition = useMemo(() => {
     return currentHour * 60 + now.getMinutes();
   }, [currentHour, now]);
@@ -213,22 +254,59 @@ export function DayView({
                 key={hour}
                 hour={hour}
                 onClick={() => handleHourClick(hour)}
-              >
-                {dayEvents.map((event) => {
-                  const { top, height } = getEventPosition(event);
-                  const eventHour = event.startTime ? new Date(event.startTime).getHours() : -1;
-                  if (eventHour !== hour) return null;
-                  return (
-                    <DraggableEvent
-                      key={event.id}
-                      event={event}
-                      systemColors={systemColors}
-                      onClick={(e) => onEventClick?.(event, e)}
-                    />
-                  );
-                })}
-              </DroppableHour>
+              />
             ))}
+
+            {/* Render events with column layout */}
+            {dayEvents.map((event) => {
+              if (!event.startTime || !event.endTime) return null;
+              const startDate = new Date(event.startTime);
+              const endDate = new Date(event.endTime);
+              
+              const startHour = startDate.getHours();
+              const startMinutes = startDate.getMinutes();
+              const top = startHour * 60 + startMinutes;
+              
+              const durationMs = endDate.getTime() - startDate.getTime();
+              const durationMinutes = durationMs / (1000 * 60);
+              const height = Math.max(durationMinutes, 24);
+              
+              const colInfo = eventColumns.get(event.id) || { column: 0, totalColumns: 1 };
+              const gap = 4;
+              const usableWidth = 100 - (gap * (colInfo.totalColumns - 1));
+              const eventWidth = usableWidth / colInfo.totalColumns;
+              const leftPos = colInfo.column * (eventWidth + gap);
+              
+              const colors = systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50 dark:bg-blue-500/20", border: "border-blue-500", text: "text-blue-700 dark:text-blue-400", hover: "hover:bg-blue-50 dark:hover:bg-blue-500/30" };
+
+              return (
+                <div
+                  key={event.id}
+                  onClick={(e) => { e.stopPropagation(); onEventClick?.(event, e); }}
+                  className={cn(
+                    "absolute rounded-md px-2 py-1 cursor-pointer transition-all duration-200 hover:shadow-md z-10",
+                    colors.bgLight,
+                    colors.text,
+                    `border-l-2 ${colors.border.replace("border-", "border-l-")}`
+                  )}
+                  style={{ 
+                    top: `${top}px`, 
+                    height: `${height}px`,
+                    left: `${leftPos}%`,
+                    width: `${eventWidth}%`
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium truncate">{event.title}</span>
+                  </div>
+                  {height > 40 && (
+                    <div className="text-xs opacity-70">
+                      {format(startDate, "h:mm a")} - {format(endDate, "h:mm a")}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Buffer blocks */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, memo } from "react";
 import { 
   format, 
   startOfWeek, 
@@ -13,6 +13,8 @@ import type { CalendarEvent } from "@/lib/types";
 import type { BufferBlock } from "@/lib/schedulerWithBuffers";
 import { expandRecurringEvents, type EventWithRecurrence } from "@/src/features/calendar";
 import { cn } from "@/lib/utils";
+import { TimezoneService } from "@/src/domain/calendar/services/TimezoneService";
+import { utcToLocal } from "@/src/domain/calendar/utils/timezone-events";
 
 interface WeeklyViewProps {
   date: Date;
@@ -111,6 +113,8 @@ export function WeekView({
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [weekStart]);
 
+  const userTz = TimezoneService.getDefault();
+  
   const eventsByDay = useMemo(() => {
     const expandedEvents = expandRecurringEvents(events as unknown as EventWithRecurrence[], weekDays[0], "weekly") as unknown as CalendarEvent[];
     const map = new Map<string, CalendarEvent[]>();
@@ -118,12 +122,13 @@ export function WeekView({
     
     expandedEvents.forEach((event) => {
       if (!event.startTime) return;
-      const eventDate = new Date(event.startTime);
+      const startLocal = utcToLocal(event.startTime, event.startTimezone || userTz);
+      const eventDate = new Date(startLocal.year, startLocal.month, startLocal.day, startLocal.hour, startLocal.minute);
       const key = format(eventDate, "yyyy-MM-dd");
       if (map.has(key)) map.get(key)!.push(event);
     });
     return map;
-  }, [events, weekDays]);
+  }, [events, weekDays, userTz]);
 
   const eventColumnsByDay = useMemo(() => {
     const columnsMap = new Map<string, Map<string, { column: number; totalColumns: number }>>();
@@ -243,8 +248,10 @@ export function WeekView({
                   {/* Events for this day */}
                   {dayEvents.map((event) => {
                     if (!event.startTime || !event.endTime) return null;
-                    const startDate = new Date(event.startTime);
-                    const endDate = new Date(event.endTime);
+                    const startLocal = utcToLocal(event.startTime, event.startTimezone || userTz);
+                    const endLocal = utcToLocal(event.endTime, event.startTimezone || userTz);
+                    const startDate = new Date(startLocal.year, startLocal.month, startLocal.day, startLocal.hour, startLocal.minute);
+                    const endDate = new Date(endLocal.year, endLocal.month, endLocal.day, endLocal.hour, endLocal.minute);
                     
                     const startHour = startDate.getHours();
                     const startMinutes = startDate.getMinutes();

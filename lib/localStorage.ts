@@ -3,7 +3,7 @@
  * Stores sensitive data locally with encryption
  */
 
-import { encrypt, decrypt, isEncryptionAvailable, type EncryptedData } from "./encryption";
+import { encryptText, decryptText, isEncryptionAvailable, type EncryptedData } from "./e2ee";
 
 export interface LocalEvent {
   id: string;
@@ -92,7 +92,7 @@ export class EncryptedLocalStorage {
     const data = JSON.stringify(events);
     
     if (this.encryptionKey) {
-      const encrypted = await encrypt(data, this.encryptionKey);
+      const encrypted = await encryptText(data, this.encryptionKey);
       browserStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(encrypted));
     } else {
       browserStorage.setItem(STORAGE_KEYS.EVENTS, data);
@@ -115,7 +115,7 @@ export class EncryptedLocalStorage {
     try {
       if (this.encryptionKey) {
         const encrypted: EncryptedData = JSON.parse(stored);
-        const decrypted = await decrypt(encrypted, this.encryptionKey);
+        const decrypted = await decryptText(encrypted, this.encryptionKey);
         return JSON.parse(decrypted);
       }
       return JSON.parse(stored);
@@ -170,7 +170,7 @@ export class EncryptedLocalStorage {
     const data = JSON.stringify(user);
     
     if (this.encryptionKey) {
-      const encrypted = await encrypt(data, this.encryptionKey);
+      const encrypted = await encryptText(data, this.encryptionKey);
       browserStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(encrypted));
     } else {
       browserStorage.setItem(STORAGE_KEYS.USER, data);
@@ -186,7 +186,7 @@ export class EncryptedLocalStorage {
     try {
       if (this.encryptionKey) {
         const encrypted: EncryptedData = JSON.parse(stored);
-        const decrypted = await decrypt(encrypted, this.encryptionKey);
+        const decrypted = await decryptText(encrypted, this.encryptionKey);
         return JSON.parse(decrypted);
       }
       return JSON.parse(stored);

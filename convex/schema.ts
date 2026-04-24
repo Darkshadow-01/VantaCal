@@ -36,6 +36,9 @@ export default defineSchema({
     userId: v.string(),
     calendarId: v.optional(v.id("shared_calendars")),
     encryptedPayload: v.string(),
+    syncStatus: v.optional(v.union(v.literal("saving"), v.literal("saved"), v.literal("failed"))),
+    lastSyncedAt: v.optional(v.number()),
+    isEncrypted: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -328,4 +331,43 @@ export default defineSchema({
   })
     .index("by_calendar", ["calendarId"])
     .index("by_calendar_user", ["calendarId", "userId"]),
+
+  // Team scheduling tables
+  team_schedules: defineTable({
+    userId: v.string(),
+    workspaceId: v.id("workspaces"),
+    workingHoursStart: v.number(),
+    workingHoursEnd: v.number(),
+    workingDaysOfWeek: v.array(v.number()),
+    focusTimeEnabled: v.boolean(),
+    focusTimeStart: v.optional(v.number()),
+    focusTimeEnd: v.optional(v.number()),
+    autoAcceptMeetings: v.boolean(),
+    minNoticeMinutes: v.number(),
+    maxMeetingsPerDay: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"]),
+
+  meeting_requests: defineTable({
+    organizerId: v.string(),
+    workspaceId: v.id("workspaces"),
+    title: v.string(),
+    durationMinutes: v.number(),
+    scheduledStartTime: v.number(),
+    scheduledEndTime: v.number(),
+    attendeeIds: v.array(v.string()),
+    acceptedAttendees: v.array(v.string()),
+    declinedAttendees: v.array(v.string()),
+    availabilityScore: v.number(),
+    wasOptimalSlot: v.boolean(),
+    status: v.union(v.literal("pending"), v.literal("scheduled"), v.literal("cancelled")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_organizer", ["organizerId"])
+    .index("by_workspace", ["workspaceId"])
+    .index("by_status", ["status"]),
 });

@@ -121,7 +121,6 @@ export function CreateEventModal({ isOpen, onClose, onSave, initialDate, initial
       color: newEvent.color,
       type: newEvent.type,
       version: 1,
-      updatedAt: Date.now(),
     };
 
     return detectConflicts(tempEvent as CalendarEvent, existingEvents);

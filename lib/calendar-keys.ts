@@ -50,7 +50,7 @@ export interface CalendarKeysCollection {
   version: number;
 }
 
-let calendarKeysCache: Map<string, CalendarKey> = new Map();
+const calendarKeysCache: Map<string, CalendarKey> = new Map();
 
 export function isKeyEncryptionAvailable(): boolean {
   return typeof crypto !== "undefined" && crypto.subtle !== undefined;

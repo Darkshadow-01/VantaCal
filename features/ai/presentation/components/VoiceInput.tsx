@@ -30,13 +30,14 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): VoiceInputRet
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<Error | null>(null);
-  const [isSupported, setIsSupported] = useState(false);
+  const [isSupported, setIsSupported] = useState(() => {
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  });
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setIsSupported(!!SpeechRecognition);
     
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();

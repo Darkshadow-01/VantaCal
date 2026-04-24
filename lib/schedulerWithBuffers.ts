@@ -1,6 +1,5 @@
 import { ConvexHttpClient } from "convex/browser";
 import { fullApi } from "../convex/_generated/api";
-import { runSchedulerAgent } from "./localAI";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 

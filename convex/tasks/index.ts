@@ -65,7 +65,7 @@ export const getTasks = query({
       return [];
     }
     
-    let q = ctx.db.query("tasks").withIndex("by_user", (q) => q.eq("userId", args.userId!));
+    const q = ctx.db.query("tasks").withIndex("by_user", (q) => q.eq("userId", args.userId!));
     
     const tasks = await q.collect();
     

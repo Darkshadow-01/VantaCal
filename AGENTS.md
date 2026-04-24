@@ -7,149 +7,141 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- convex-ai-start -->
 This project uses [Convex](https://convex.dev) as its backend with E2EE encryption.
 
-When working with Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
-
-Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+When working with Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns.
 <!-- convex-ai-end -->
 
 ## Code Architecture
 
-This project follows a feature-based architecture in `src/features/`:
+This project follows **Clean Architecture** with clear layer separation:
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── calendar/           # Main calendar page
-│   ├── api/               # API routes (AI agents)
-│   ├── sign-in/           # Clerk authentication
-│   └── sign-up/           # Clerk authentication
+├── domain/                    # Pure business logic (framework-free)
+│   ├── calendar/
+│   │   ├── interfaces/       # IEventRepository, IStoragePort, IAIServicePort
+│   │   ├── useCases/         # CreateEventUseCase, CalculateFocusUseCase
+│   │   ├── event.ts         # CalendarEvent entity
+│   │   └── valueObjects/    # EventTime, CalendarColor
+│   ├── events/              # Domain events
+│   └── ai/
+│       └── interfaces/       # IAIServicePort
+├── useCases/                # Application business rules
+│   └── ScheduleWithAI.ts    # ScheduleWithAIUseCase, ManageFocusUseCase
+├── adapters/               # Concrete implementations
+│   ├── storage/           # IndexedDBStorageAdapter
+│   └── ai/              # LocalAIServiceAdapter
+├── infrastructure/        # Framework wiring
+│   ├── adapters/          # ConvexEventRepository
+│   └── container.ts      # DI container
 ├── src/features/          # Feature modules
-│   ├── calendar/          # Calendar management (PRIMARY)
-│   ├── encryption/        # E2EE encryption layer
-│   ├── ai/               # AI services
-│   └── shared-calendars/   # Calendar sharing
-├── components/
-│   ├── Calendar/        # Calendar UI components
-│   │   ├── CalendarView.tsx
-│   │   ├── MonthView.tsx
-│   │   ├── WeekView.tsx
-│   │   ├── DayView.tsx
-│   │   ├── CreateEventModal.tsx
-│   │   └── EventModal.tsx
-│   └── ui/              # UI components (shadcn/ui)
-├── hooks/                # Custom React hooks
-│   ├── useEvents.ts     # Event management (localStorage)
-│   ├── useSettings.ts # Settings management
-│   └── useCalendarState.ts
-└── lib/                 # Utilities
-    ├── types.ts        # TypeScript types
-    ├── constants.ts   # Calendar constants
-    ├── e2ee.ts      # E2EE encryption
-    └── offline-storage.ts
+│   ├── calendar/         # Calendar CRUD, conflict detection, recurrence
+│   ├── encryption/       # E2EE encryption hooks
+│   ├── shared-calendars/  # Sharing
+│   ├── sync/           # Sync services
+│   └── team-scheduling/ # Team scheduling
+├── components/           # UI components
+├── hooks/              # Thin React wrappers (call use cases)
+└── lib/               # Utilities (encryption, storage, types)
 ```
+
+### Dependency Rule
+
+**Dependencies point inward only:**
+- `domain/` and `useCases/` import nothing from `adapters/` or `infrastructure/`
+- `hooks/` are thin wrappers that call use cases
+- Business logic lives in domain/use cases, not hooks
 
 ### Import Guidelines
 
-- **Types**: `@/lib/types` or `@/src/features/calendar/model/types`
-- **Components**: `@/components/Calendar` or `@/components/ui`
-- **Hooks**: `@/hooks`
-- **Encryption**: `@/lib/e2ee`, `@/lib/event-encryptor`
-- **Calendar Features**: `@/src/features/calendar`
-- **Path aliases**: Configured in `tsconfig.json`
+| Category | Path |
+|----------|------|
+| Types | `@/lib/types` or `@/src/domain/calendar/event` |
+| Domain Ports | `@/src/domain/calendar/interfaces/IEventRepository` |
+| Use Cases | `@/src/domain/calendar/useCases/*` or `@/src/useCases` |
+| Encryption | `@/lib/e2ee` |
+| Components | `@/components/Calendar` or `@/components/ui` |
 
-### Important Notes for Agents
+### Build Verification
 
-1. **Build passes** - Run `npm run build` to verify changes
-2. **E2EE Encryption** - All events encrypted client-side before storage
-   - Encryption keys: `@/lib/e2ee.ts`, `@/lib/calendar-keys.ts`
-   - Event encryption: `@/lib/event-encryptor.ts`, `@/lib/access-control.ts`
-3. **Clerk auth** - Requires valid keys in `.env.local`
-4. **React Hooks order** - Don't call hooks after early returns
-5. **localStorage** - Currently using localStorage for events
-6. **Convex** - Stores encrypted payloads (cannot read data)
+Run `npm run build` to verify changes — must pass before committing.
 
-### Breaking Changes Avoid
+### E2EE Encryption
 
-- DO NOT import from `@/hooks/useEvents` - does not exist
-- DO NOT use `@/src/features/ai/services` - path may not exist
-- DO NOT use `@/lib/schedulerWithBuffers` - path may not exist
+All events encrypted client-side before storage:
+- **Canonical**: `@/lib/e2ee` exports `encryptData`, `decryptData`
+- **Legacy re-exports**: `@/lib/encryption` for backward compat
 
-### Feature Dependencies
+### React Hooks Best Practices
 
-| Feature | Primary File | Status |
-|---------|-------------|--------|
-| Events | `hooks/useEvents.ts` | Use localStorage |
-| Calendar CRUD | `src/features/calendar/` | Feature module |
-| Encryption | `lib/e2ee.ts` | Working |
-| Sharing | `lib/sharing-invite.ts` | Phase 3 complete |
-| Notifications | `lib/metadata-free-notifications.ts` | Phase 4 complete |
-| Storage | `lib/encrypted-backend.ts` | Phase 5 complete |
-| AI Voice/Text | `components/Calendar/AIAssistantModal.tsx` | Implemented |
+1. **Hooks call use cases** — minimal logic in hooks
+2. **No early returns before hook calls** — React rule
+3. **Event hook**: `@/hooks/useEvents` (localStorage/IndexedDB)
+4. **Focus hook**: `@/hooks/useFocusEngine` (delegates to domain use case)
 
-### AI Integration
-
-**Voice & Text AI Assistant** (`components/Calendar/AIAssistantModal.tsx`):
-- Floating button in toolbar (sparkle icon) - triggers modal
-- Uses Web Speech API for voice input (Chrome/Safari/Edge)
-- Natural language parsing via `/api/localAI` with `agent: "parse"`
-- Parses: title, system (Health/Work/Relationships), time, duration, recurrence
-- Shows preview with confidence score before adding
-
-**EventModal AI Input** (`components/Calendar/EventModal.tsx`):
-- "Add with AI" button reveals text input + mic button
-- Parsed data auto-fills title, system, time, duration
-
-### Type Safety Pattern
-
-When using `CalendarEvent.startTime` or `.endTime` (both are optional), use null checks:
+### Type Safety
 
 ```typescript
-// ❌ Wrong - will show TS error
-format(new Date(event.startTime), "h:mm a")
-
-// ✅ Correct - with conditional
+// CalendarEvent.startTime is optional - check before use
 event.startTime ? format(new Date(event.startTime), "h:mm a") : "All day"
 
-// ✅ Use lib/date-utils.ts helpers
+// Or use lib/date-utils helpers
 import { formatTime, formatDateTime } from "@/lib/date-utils";
-formatTime(event.startTime)
-formatDateTime(event.startTime)
 ```
 
-### CalendarEvent Type
+### Files to Avoid
 
-```typescript
-interface CalendarEvent {
-  id: string;
-  title: string;
-  startTime?: number;   // Optional - check before use
-  endTime?: number;    // Optional - check before use
-  // ...other fields
-}
-```
+- `@/lib/schedulerWithBuffers` - deprecated
+- `@/lib/encryptedHooks` - consolidated to `@/src/features/encryption/service/hooks`
+- Direct imports to `src/features/ai/services` - path may not exist
 
-### Available Utilities
+<skills_system priority="1">
 
-- `@/lib/date-utils.ts` - safeDate, formatTime, formatDateTime, getDurationMinutes
-- `@/lib/types.ts` - CalendarEvent, Calendar, Settings (primary types)
-- `@/src/features/calendar/model/types.ts` - Mirror of above (canonical source)
+## Available Skills
 
-### Implemented Features
+<!-- SKILLS_TABLE_START -->
+<usage>
+When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively.
+</usage>
 
-**High Priority (Complete):**
-- Week numbers in Weekly view
-- Reminders in EventModal
-- Custom color picker (9 colors)
-- List view (AgendaView)
+<available_skills>
 
-**Medium Priority (Complete):**
-- Recurrence end options (Never, End on date, End after X)
-- Guests/attendees UI
-- Import/Export ICS
-- Working hours in Settings
-- Keyboard shortcuts
+<skill>
+<name>algorithmic-art</name>
+<description>Creating algorithmic art using p5.js. Use when users request generative art, flow fields, or particle systems.</description>
+<location>project</location>
+</skill>
 
-**AI Integration (Complete):**
-- AIAssistantModal with voice + text
-- EventModal "Add with AI" button
-- Ollama/OpenAI natural language parsing
+<skill>
+<name>canvas-design</name>
+<description>Create beautiful visual art in .png and .pdf documents.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>frontend-design</name>
+<description>Create distinctive, production-grade frontend interfaces.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>pptx</name>
+<description>Use when a .pptx file is involved.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>web-design-guidelines</name>
+<description>Review UI code for Web Interface Guidelines compliance.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>xlsx</name>
+<description>Use when a spreadsheet file is the primary input or output.</description>
+<location>project</location>
+</skill>
+
+</available_skills>
+<!-- SKILLS_TABLE_END -->
+
+</skills_system>

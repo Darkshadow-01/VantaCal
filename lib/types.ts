@@ -1,3 +1,8 @@
+/**
+ * @deprecated Import from @/src/domain/calendar/event instead
+ * This file is kept for backward compatibility
+ */
+
 export { 
   type CalendarEvent, 
   type RecurrenceConfig, 
@@ -17,3 +22,5 @@ export {
 } from "../src/domain/calendar/event";
 
 export type CalendarEventType = "holiday" | "meeting" | "personal" | "task" | "event" | "reminder";
+
+export type { EventInput } from "../src/domain/calendar/event";

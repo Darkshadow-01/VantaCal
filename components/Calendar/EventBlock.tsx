@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo, useMemo } from "react";
 import { format } from "date-fns";
 import { MoreVertical, Pencil, Trash2, Clock, AlertTriangle } from "lucide-react";
 import type { CalendarEvent } from "@/lib/types";
+import { TimezoneService } from "@/src/domain/calendar/services/TimezoneService";
+import { utcToLocal } from "@/src/domain/calendar/utils/timezone-events";
 
 interface SystemColors {
   bg: string;
@@ -23,7 +25,7 @@ interface EventBlockProps {
   delayRisk?: "low" | "medium" | "high";
 }
 
-export function EventBlock({
+export const EventBlock = memo(function EventBlock({
   event,
   systemColors,
   onClick,
@@ -34,8 +36,12 @@ export function EventBlock({
   const [showMenu, setShowMenu] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   
-  const startTime = event.startTime ? new Date(event.startTime) : new Date();
-  const endTime = event.endTime ? new Date(event.endTime) : new Date(startTime.getTime() + 3600000);
+  const userTz = TimezoneService.getDefault();
+  const tz = event.startTimezone || userTz;
+  const startLocal = event.startTime ? utcToLocal(event.startTime, tz) : null;
+  const endLocal = event.endTime ? utcToLocal(event.endTime, tz) : null;
+  const startTime = startLocal ? new Date(startLocal.year, startLocal.month, startLocal.day, startLocal.hour, startLocal.minute) : new Date();
+  const endTime = endLocal ? new Date(endLocal.year, endLocal.month, endLocal.day, endLocal.hour, endLocal.minute) : new Date(startTime.getTime() + 3600000);
   const isValidTime = !isNaN(startTime.getTime()) && !isNaN(endTime.getTime());
   const durationMinutes = isValidTime ? (endTime.getTime() - startTime.getTime()) / (1000 * 60) : 60;
 
@@ -188,4 +194,5 @@ export function EventBlock({
       </div>
     </div>
   );
-}
+});
+EventBlock.displayName = 'EventBlock';

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { getLastSystem, setLastSystem } from "@/hooks/useEncryption";
 import { format, addHours, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths } from "date-fns";
-import { Sparkles, AlertTriangle, Calendar, Clock, MapPin, Repeat, FileText, X, ChevronLeft, ChevronRight, Bell, Users, Mic, Loader2 } from "lucide-react";
+import { AlertTriangle, Calendar, Clock, MapPin, Repeat, FileText, X, ChevronLeft, ChevronRight, Bell, Users, Sparkles } from "lucide-react";
 import type { CalendarEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { findAvailableSlots } from "@/src/features/calendar/service/meeting-scheduler";
@@ -52,7 +53,8 @@ export function EventModal({
   const [title, setTitle] = useState(event?.title || "");
   const [description, setDescription] = useState(event?.description || "");
   const [system, setSystem] = useState<"Health" | "Work" | "Relationships">(
-    (event?.system as "Health" | "Work" | "Relationships") || "Work"
+    (event?.system as "Health" | "Work" | "Relationships") || 
+    (typeof window !== "undefined" ? getLastSystem() as "Health" | "Work" | "Relationships" : "Work")
   );
   const [allDay, setAllDay] = useState(event?.allDay || false);
   const [startDate, setStartDate] = useState("");
@@ -60,13 +62,13 @@ export function EventModal({
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
   const [location, setLocation] = useState(event?.location || "");
-  const [recurrence, setRecurrence] = useState<string>(typeof event?.recurrence === 'string' ? event.recurrence : "");
+  const [recurrence, setRecurrence] = useState<string>(typeof event?.recurrence === 'string' ? event.recurrence : "none");
   const [recurrenceEndType, setRecurrenceEndType] = useState<"never" | "onDate" | "after">("never");
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [recurrenceCount, setRecurrenceCount] = useState(10);
   const [guests, setGuests] = useState<string[]>(event?.guests || []);
   const [newGuest, setNewGuest] = useState("");
-  const [reminder, setReminder] = useState<number>(event?.reminder || 0);
+  const [reminder, setReminder] = useState<number>(event?.reminder || 30);
   const [customColor, setCustomColor] = useState<string | undefined>(event?.color);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -74,12 +76,10 @@ export function EventModal({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(new Date());
   const datePickerRef = useRef<HTMLDivElement>(null);
-  const [aiInput, setAiInput] = useState("");
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [showAiInput, setShowAiInput] = useState(false);
+
   const [suggestedTimes, setSuggestedTimes] = useState<string[]>([]);
   const [showSuggestedTimes, setShowSuggestedTimes] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -142,6 +142,8 @@ export function EventModal({
         reminder: reminder > 0 ? reminder : undefined,
         guests: guests.length > 0 ? guests : undefined,
       });
+      
+      setLastSystem(system);
     } finally {
       setIsSaving(false);
     }
@@ -155,58 +157,6 @@ export function EventModal({
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleAiParse = async () => {
-    if (!aiInput.trim()) return;
-    setIsAiLoading(true);
-    try {
-      const response = await fetch("/api/localAI", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agent: "parse", input: aiInput }),
-      });
-      const data = await response.json();
-      if (data.success && data.result) {
-        const parsed = data.result as { title: string; system: "Health" | "Work" | "Relationships"; startTime: { hour: number; minute: number }; duration: number };
-        if (parsed.title) setTitle(parsed.title);
-        if (parsed.system) setSystem(parsed.system);
-        if (parsed.startTime) {
-          setStartTime(`${parsed.startTime.hour.toString().padStart(2, '0')}:${parsed.startTime.minute.toString().padStart(2, '0')}`);
-        }
-        if (parsed.duration) {
-          const start = new Date(`${startDate}T${startTime}`);
-          const end = new Date(start.getTime() + parsed.duration * 60000);
-          setEndTime(format(end, "HH:mm"));
-        }
-        setShowAiInput(false);
-        setAiInput("");
-      }
-    } catch (err) {
-      console.error("AI parse error:", err);
-    } finally {
-      setIsAiLoading(false);
-    }
-  };
-
-  const handleVoiceInput = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let transcript = "";
-      for (let i = 0; i < event.results.length; i++) {
-        if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
-      }
-      if (transcript) {
-        setAiInput(transcript);
-        setShowAiInput(true);
-      }
-    };
-    recognition.start();
   };
 
   return (
@@ -227,31 +177,6 @@ export function EventModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {!showAiInput && (
-            <button type="button" onClick={() => setShowAiInput(true)} className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-              <Sparkles className="w-3 h-3" />Add with AI
-            </button>
-          )}
-
-          {showAiInput && (
-            <div className="flex gap-1.5">
-              <input type="text" value={aiInput} onChange={(e) => setAiInput(e.target.value)} placeholder="e.g., Meeting tomorrow at 3pm" className="flex-1 px-2.5 py-1.5 bg-[var(--bg-secondary)] rounded text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]" />
-              <button type="button" onClick={handleVoiceInput} disabled={isListening}
-                className={cn("p-1.5 rounded transition-all", isListening ? "bg-red-500 text-white" : "bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
-              >
-                {isListening ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
-              </button>
-              <button
-                type="button"
-                onClick={handleAiParse}
-                disabled={!aiInput.trim() || isAiLoading}
-                className="px-2.5 py-1.5 bg-[var(--accent)] text-[var(--accent-contrast)] rounded text-xs press-scale disabled:opacity-50"
-              >
-                {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Parse"}
-              </button>
-            </div>
-          )}
-
           {/* Title Input */}
           <div>
             <input
@@ -486,75 +411,174 @@ export function EventModal({
             )}
           </div>
 
-          {/* Location */}
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
-            <MapPin className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Add location"
-              className="flex-1 bg-transparent border-none outline-none placeholder:text-[var(--text-muted)] text-sm text-[var(--text-primary)]"
-            />
-          </div>
+          {/* More Options Toggle */}
+          <button type="button" onClick={() => setShowMoreOptions(!showMoreOptions)} className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] py-1">
+            <ChevronRight className={cn("w-3 h-3 transition-transform", showMoreOptions && "rotate-90")} />
+            {showMoreOptions ? "Less options" : "More options"}
+          </button>
 
-          {/* Recurrence */}
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
-            <Repeat className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
-            <select
-              value={recurrence}
-              onChange={(e) => setRecurrence(e.target.value)}
-              className="flex-1 bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
-            >
-              <option value="none">Does not repeat</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="biweekly">Every 2 weeks</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
-
-          {/* Recurrence End Options */}
-          {recurrence !== "none" && (
-            <div className="pl-11 space-y-2">
-              <select
-                value={recurrenceEndType}
-                onChange={(e) => setRecurrenceEndType(e.target.value as typeof recurrenceEndType)}
-                className="w-full bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
-              >
-                <option value="never">Never ends</option>
-                <option value="onDate">Ends on date</option>
-                <option value="after">Ends after occurrences</option>
-              </select>
-              
-              {recurrenceEndType === "onDate" && (
+          {/* Advanced Options - Collapsible */}
+          {showMoreOptions && (
+            <div className="space-y-2">
+              {/* Location */}
+              <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+                <MapPin className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
                 <input
-                  type="date"
-                  value={recurrenceEndDate}
-                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                  className="w-full bg-[var(--bg-secondary)] dark:bg-[#252830] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)]"
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Add location"
+                  className="flex-1 bg-transparent border-none outline-none placeholder:text-[var(--text-muted)] text-sm text-[var(--text-primary)]"
                 />
-              )}
-              
-              {recurrenceEndType === "after" && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">After</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={recurrenceCount}
-                    onChange={(e) => setRecurrenceCount(Number(e.target.value))}
-                    className="w-16 bg-[var(--bg-secondary)] dark:bg-[#252830] border border-[var(--border)] rounded-lg px-2 py-1 text-sm text-[var(--text-primary)]"
-                  />
-                  <span className="text-sm text-gray-500">occurrences</span>
+              </div>
+
+              {/* Recurrence */}
+              <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+                <Repeat className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
+                <select
+                  value={recurrence}
+                  onChange={(e) => setRecurrence(e.target.value)}
+                  className="flex-1 bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
+                >
+                  <option value="none">Does not repeat</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Every 2 weeks</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+
+{/* Recurrence End Options */}
+              {recurrence !== "none" && (
+                <div className="pl-11 space-y-2">
+                  <select
+                    value={recurrenceEndType}
+                    onChange={(e) => setRecurrenceEndType(e.target.value as typeof recurrenceEndType)}
+                    className="w-full bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
+                  >
+                    <option value="never">Never ends</option>
+                    <option value="onDate">Ends on date</option>
+                    <option value="after">Ends after occurrences</option>
+                  </select>
+                  
+                  {recurrenceEndType === "onDate" && (
+                    <input
+                      type="date"
+                      value={recurrenceEndDate}
+                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                      className="w-full bg-[var(--bg-secondary)] dark:bg-[#252830] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)]"
+                    />
+                  )}
+                  
+                  {recurrenceEndType === "after" && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">After</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={recurrenceCount}
+                        onChange={(e) => setRecurrenceCount(Number(e.target.value))}
+                        className="w-16 bg-[var(--bg-secondary)] dark:bg-[#252830] border border-[var(--border)] rounded-lg px-2 py-1 text-sm text-[var(--text-primary)]"
+                      />
+                      <span className="text-sm text-gray-500">occurrences</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {/* Reminder */}
+          {/* Reminder - always visible */}
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+            <Bell className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
+            <select
+              value={reminder}
+              onChange={(e) => setReminder(Number(e.target.value))}
+              className="flex-1 bg-white dark:bg-[#1A1D24] border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
+            >
+              <option value={0}>No reminder</option>
+              <option value={5}>5 minutes before</option>
+              <option value={10}>10 minutes before</option>
+              <option value={15}>15 minutes before</option>
+              <option value={30}>30 minutes before</option>
+              <option value={60}>1 hour before</option>
+              <option value={1440}>1 day before</option>
+            </select>
+          </div>
+
+          {/* Advanced options (collapsible) */}
+          {showMoreOptions && (
+            <div className="space-y-2">
+              {/* Guests */}
+              <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group">
+                <Users className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="text-sm text-[var(--text-primary)]">Add guests</span>
+                    {guests.length > 0 && (
+                      <span className="text-xs text-[var(--text-muted)]">({guests.length})</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {guests.map((guest, idx) => (
+                      <span 
+                        key={idx} 
+                        className="inline-flex items-center gap-1 text-xs bg-[var(--bg-secondary)] text-[var(--text-secondary)] px-2 py-0.5 rounded-full"
+                      >
+                        {guest}
+                        <button 
+                          type="button"
+                          onClick={() => setGuests(guests.filter((_, i) => i !== idx))}
+                          className="hover:text-[var(--text-primary)]"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-1">
+                    <input
+                      type="email"
+                      value={newGuest}
+                      onChange={(e) => setNewGuest(e.target.value)}
+                      placeholder="Enter email"
+                      className="flex-1 bg-transparent border-b border-[var(--border)] outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newGuest.trim()) {
+                          setGuests([...guests, newGuest.trim()]);
+                          setNewGuest("");
+                        }
+                      }}
+                    />
+                    {newGuest.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => { setGuests([...guests, newGuest.trim()]); setNewGuest(""); }}
+                        className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      >
+                        Add
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
+                <FileText className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors mt-0.5" />
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+placeholder="Add description"
+                  rows={2}
+                  className="flex-1 bg-transparent border-none outline-none placeholder:text-[var(--text-muted)] dark:placeholder:text-gray-500 text-sm text-[var(--text-primary)] resize-none"
+                />
+              </div>
+            </div>
+          )}
+          {/* Reminder stays visible */}
           <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group cursor-pointer">
             <Bell className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] dark:group-hover:text-gray-300 transition-colors" />
             <select
@@ -637,18 +661,6 @@ export function EventModal({
               className="flex-1 bg-transparent border-none outline-none placeholder:text-[var(--text-muted)] dark:placeholder:text-gray-500 text-sm text-[var(--text-primary)] resize-none"
             />
           </div>
-
-          {/* AI Buffer Suggestion */}
-          {!event && (
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3.5 border border-purple-100 border-[#9333EA]/30">
-              <div className="flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
-                  After creating this event, the Scheduler Agent will analyze your schedule and suggest optimal buffer times.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#333]">

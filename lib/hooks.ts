@@ -44,6 +44,6 @@ export function useUpdateUser() {
   return useMutation(api.users.index.updateUser);
 }
 
-export { usePrivacyState, useEncryptedEvents, useOfflineSync } from "./encryptedHooks";
+export { usePrivacyState, useEncryptedEvents, useOfflineSync } from "@/src/features/encryption/service/hooks";
 export { encryptedLocalStorage } from "./localStorage";
-export { encrypt, decrypt } from "./encryption";
+export { encryptData, decryptData } from "./e2ee";

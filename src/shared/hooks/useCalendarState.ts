@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import type { ViewType, TodayDate } from "@/features/calendar/model/types";
+import type { ViewType, TodayDate } from "@/src/domain/calendar/event";
 import { DAYS, MONTHS } from "@/shared/constants/calendar";
 
 export function useCalendarState() {

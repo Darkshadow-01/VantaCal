@@ -82,13 +82,11 @@ export function ImportExportModal({ isOpen, onClose, events, onImport }: ImportE
         currentEvent = { title: "", color: "#4F8DFD", type: "event", calendarId: "personal", system: "Work" };
       } else if (line === "END:VEVENT" && currentEvent) {
         if (currentEvent.startTime) {
-          const now = Date.now();
           events.push({
             ...currentEvent,
-            id: `imported-${now}-${Math.random()}`,
+            id: `imported-${crypto.randomUUID()}`,
             allDay: false,
             version: 1,
-            updatedAt: now,
           } as CalendarEvent);
         }
         currentEvent = null;

@@ -529,3 +529,6 @@ export async function restoreKeyFromBackup(
   
   return await importKey(decrypted);
 }
+
+export type { EncryptedData, EncryptionKey } from "./encryption";
+export { encrypt as encryptText, decrypt as decryptText, setEncryptionPassword, clearEncryptionKey, generateKey, deriveKeyFromPassword as deriveKeyFromPasswordSimple } from "./encryption";

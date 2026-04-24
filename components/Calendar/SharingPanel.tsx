@@ -60,7 +60,18 @@ export function SharingPanel({
   const [activeTab, setActiveTab] = useState<"members" | "links" | "invites">(
     "members"
   );
-  const [members, setMembers] = useState<SharedMember[]>([]);
+  
+  const initialRules = getAccessRules(calendarId);
+  const initialLinks = getAllLinksForCalendar(calendarId);
+  
+  const [members, setMembers] = useState<SharedMember[]>(() => 
+    initialRules.map((r) => ({
+      id: r.principalId,
+      email: r.principalId,
+      accessLevel: r.accessLevel,
+      status: "active" as const,
+    }))
+  );
   const [links, setLinks] = useState<
     Array<{
       id: string;
@@ -72,7 +83,18 @@ export function SharingPanel({
       useCount: number;
       createdAt: number;
     }>
-  >([]);
+  >(() => 
+    initialLinks.map((l) => ({
+      id: l.id,
+      linkKey: l.linkKey,
+      title: l.title,
+      accessLevel: l.accessLevel,
+      expiresAt: l.expiresAt,
+      maxUses: l.maxUses,
+      useCount: l.useCount,
+      createdAt: l.createdAt,
+    }))
+  );
   const [invites, setInvites] = useState<
     Array<{ id: string; email: string; accessLevel: AccessLevel; status: "pending" | "sent" }>
   >([]);
@@ -88,31 +110,8 @@ export function SharingPanel({
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
-    const rules = getAccessRules(calendarId);
-    setMembers(
-      rules.map((r) => ({
-        id: r.principalId,
-        email: r.principalId,
-        accessLevel: r.accessLevel,
-        status: "active" as const,
-      }))
-    );
-    onMembersChange?.(rules);
-
-    const calendarLinks = getAllLinksForCalendar(calendarId);
-    setLinks(
-      calendarLinks.map((l) => ({
-        id: l.id,
-        linkKey: l.linkKey,
-        title: l.title,
-        accessLevel: l.accessLevel,
-        expiresAt: l.expiresAt,
-        maxUses: l.maxUses,
-        useCount: l.useCount,
-        createdAt: l.createdAt,
-      }))
-    );
-  }, [calendarId, onMembersChange]);
+    onMembersChange?.(initialRules);
+  }, [calendarId, onMembersChange, initialRules]);
 
   const handleCopyLink = async (url: string, linkKey: string) => {
     await navigator.clipboard.writeText(url);

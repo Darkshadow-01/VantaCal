@@ -1,0 +1,22 @@
+[
+  {"query": "hey i need a landing page for my SaaS product, hero section with features and pricing, can you build that?", "should_trigger": true},
+  {"query": "create a React component for a button with hover effects and loading state", "should_trigger": true},
+  {"query": "make a beautiful dashboard with charts and data visualization", "should_trigger": true},
+  {"query": "build me a card component with glassmorphism effect for my portfolio site", "should_trigger": true},
+  {"query": "design a dark mode landing page with smooth animations and custom typography", "should_trigger": true},
+  {"query": "can you create a poster for my art exhibition? something modern and eye-catching", "should_trigger": true},
+  {"query": "i need a login page with a distinctive aesthetic, not the typical blue gradient stuff", "should_trigger": true},
+  {"query": "build an animated hero section with parallax effects for my startup website", "should_trigger": true},
+  {"query": "create a mobile-responsive navigation with hamburger menu and smooth transitions", "should_trigger": true},
+  {"query": "design a pricing table with creative layout, not the boring 3-column grid", "should_trigger": true},
+  {"query": "write a Python script to process some data and save to CSV", "should_trigger": false},
+  {"query": "fix this bug in my Node.js API - it's returning 500 errors on POST requests", "should_trigger": false},
+  {"query": "set up a PostgreSQL database and write a migration script", "should_trigger": false},
+  {"query": "help me write unit tests for my authentication module", "should_trigger": false},
+  {"query": "configure nginx to serve my static files with gzip compression", "should_trigger": false},
+  {"query": "debug this memory leak in my Go service", "should_trigger": false},
+  {"query": "create a Docker compose file for my microservices setup", "should_trigger": false},
+  {"query": "write a bash script to automate my daily backup process", "should_trigger": false},
+  {"query": "help me understand this regex pattern for validating emails", "should_trigger": false},
+  {"query": "refactor this Python class to use dataclasses and type hints", "should_trigger": false}
+]

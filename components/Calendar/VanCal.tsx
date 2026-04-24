@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, memo, useCallback } from "react";
 import { format, subMonths, addMonths, subWeeks, addWeeks, subDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus, Search, Calendar as CalendarIcon, Download, Settings, Sparkles, Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Calendar as CalendarIcon, Download, Settings, Menu, RefreshCw, CheckCircle, AlertCircle, Command } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
@@ -13,11 +13,13 @@ import { EventModal } from "./EventModal";
 import { SearchModal } from "./SearchModal";
 import { ImportExportModal } from "./ImportExportModal";
 import { SettingsModal } from "./SettingsModal";
-import { AIAssistantModal } from "./AIAssistantModal";
 import { useEvents } from "@/hooks/useEvents";
 import { useSettings } from "@/hooks/useSettings";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { VaultSetupModal } from "./VaultSetupModal";
+import { useFocusEngine } from "@/hooks/useFocusEngine";
+import { useCommandPalette } from "./CommandPalette";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
+import { useToastNotifications } from "@/components/Toast";
 import type { CalendarEvent } from "@/src/domain/calendar/event";
 import { cn } from "@/lib/utils";
 
@@ -156,15 +158,30 @@ export function VanCal() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   const [searchOpen, setSearchOpen] = useState(false);
   const [importExportOpen, setImportExportOpen] = useState(false);
-  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
+  
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [vaultSetupOpen, setVaultSetupOpen] = useState(false);
+  
   const [selectedSlot, setSelectedSlot] = useState<{ date: Date; hour?: number } | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const { events, createEvent, updateEvent, deleteEvent } = useEvents();
+  const { events, createEvent, updateEvent, deleteEvent, syncStatus, forceSync } = useEvents();
   const { settings, updateSetting } = useSettings();
+  const { metrics, dailyData, buffers } = useFocusEngine(events, date);
+
+  const handleQuickCreate = useCallback(async (data: { title: string; system: "Health" | "Work" | "Relationships"; duration: number; startTime: Date }) => {
+    const now = Date.now();
+    await createEvent({
+      title: data.title,
+      system: data.system,
+      startTime: data.startTime.getTime(),
+      endTime: data.startTime.getTime() + data.duration * 60 * 1000,
+      allDay: false,
+    });
+  }, [createEvent]);
+
+  const { isOpen: isCmdKOpen, setIsOpen: setCmdKOpen, CommandPalette } = useCommandPalette(handleQuickCreate);
+  const { toasts, dismissToast, success, error, ToastContainer } = useToastNotifications();
 
   const handleSearchSelect = (event: CalendarEvent) => {
     if (event.startTime) {
@@ -174,46 +191,46 @@ export function VanCal() {
     handleEdit(event);
   };
 
-  const handleSlotClick = (date: Date, hour?: number) => {
+  const handleSlotClick = useCallback((date: Date, hour?: number) => {
     setSelectedSlot({ date, hour });
     setEditingEvent(undefined);
     setShowModal(true);
-  };
+  }, []);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (view === "monthly") setDate(subMonths(date, 1));
     else if (view === "weekly") setDate(subWeeks(date, 1));
     else if (view === "daily") setDate(subDays(date, 1));
     else setDate(new Date(date.getFullYear() - 1, 0, 1));
-  };
+  }, [view, date]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (view === "monthly") setDate(addMonths(date, 1));
     else if (view === "weekly") setDate(addWeeks(date, 1));
     else if (view === "daily") setDate(addDays(date, 1));
     else setDate(new Date(date.getFullYear() + 1, 0, 1));
-  };
+  }, [view, date]);
 
-  const handleToday = () => setDate(new Date());
+  const handleToday = useCallback(() => setDate(new Date()), []);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     setEditingEvent(undefined);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleEdit = (event: CalendarEvent) => {
+  const handleEdit = useCallback((event: CalendarEvent) => {
     setEditingEvent(event);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleViewChange = (newView: ViewType) => {
+  const handleViewChange = useCallback((newView: ViewType) => {
     if (newView === view) return;
     setIsAnimating(true);
     setTimeout(() => {
       setView(newView);
       setIsAnimating(false);
     }, 150);
-  };
+  }, [view]);
 
   const handleSave = async (data: { title: string; description?: string; startTime: number; endTime: number; allDay: boolean; system: "Health" | "Work" | "Relationships"; location?: string; recurrence?: string; reminder?: number; color?: string; recurrenceEndType?: string; recurrenceEndDate?: string; recurrenceCount?: number; guests?: string[] }) => {
     const now = Date.now();
@@ -430,11 +447,13 @@ export function VanCal() {
             <motion.button 
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
-              onClick={() => setAiAssistantOpen(true)} 
-              className="p-2.5 hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150" 
-              title="AI Assistant (Ctrl+Shift+A)"
+              onClick={() => setCmdKOpen(true)} 
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] rounded-lg transition-all duration-150" 
+              title="Quick Add (Ctrl+K)"
+              aria-label="Quick add event"
             >
-              <Sparkles className="w-5 h-5 text-[var(--text-muted)]" />
+              <Command className="w-4 h-4" />
+              <span className="hidden md:inline text-xs">K</span>
             </motion.button>
             <motion.button 
               whileHover={{ scale: 1.08 }}
@@ -445,6 +464,47 @@ export function VanCal() {
             >
               <Settings className="w-5 h-5 text-[var(--text-muted)]" />
             </motion.button>
+            {syncStatus === "syncing" && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[var(--text-muted)]">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Saving...</span>
+              </div>
+            )}
+            {syncStatus === "idle" && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-green-500">
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Saved</span>
+              </div>
+            )}
+            {syncStatus === "error" && (
+              <button 
+                onClick={() => forceSync()}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-red-500 hover:text-red-600 transition-colors"
+                title="Sync failed - Click to retry"
+              >
+                <AlertCircle className="w-3.5 h-3.5" />
+                <span>Retry</span>
+              </button>
+            )}
+            {dailyData.isOverloaded && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+                <AlertCircle className="w-3.5 h-3.5" />
+                <span>Overloaded</span>
+              </div>
+            )}
+            <div 
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg cursor-pointer hover:opacity-80 transition-opacity",
+                metrics.focusScore >= 70 ? "bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400" :
+                metrics.focusScore >= 40 ? "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" :
+                "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+              )}
+              title={`Focus Score: ${metrics.focusScore}%`}
+            >
+              <span className="font-medium">{metrics.focusScore}</span>
+              <span className="text-[var(--text-muted)]">%</span>
+            </div>
+            <PrivacyBadge />
           </div>
         </header>
 
@@ -460,7 +520,13 @@ export function VanCal() {
           onClose={() => setImportExportOpen(false)}
           events={events}
           onImport={(importedEvents) => {
-            importedEvents.forEach((event) => createEvent(event));
+            importedEvents.forEach((event) => {
+              const startTime = event.startTime;
+              const endTime = event.endTime;
+              if (startTime && endTime) {
+                createEvent(event as any);
+              }
+            });
           }}
         />
 
@@ -471,17 +537,9 @@ export function VanCal() {
           onUpdateSetting={updateSetting}
         />
 
-        <AIAssistantModal
-          isOpen={aiAssistantOpen}
-          onClose={() => setAiAssistantOpen(false)}
-          onAddEvent={(event) => createEvent(event as any)}
-        />
+        <CommandPalette />
 
-        <VaultSetupModal
-          isOpen={vaultSetupOpen}
-          onClose={() => setVaultSetupOpen(false)}
-          onSuccess={() => setVaultSetupOpen(false)}
-        />
+        <ToastContainer />
 
         <main className={cn(
           "flex-1 overflow-auto",

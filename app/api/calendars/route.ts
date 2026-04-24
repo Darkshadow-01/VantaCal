@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ApiErrorBuilder } from "@/src/api";
 
 const DEFAULT_CALENDARS = [
   { id: "personal", name: "Personal", color: "#4F8DFD", visible: true },
@@ -9,17 +10,27 @@ const DEFAULT_CALENDARS = [
 
 export async function GET() {
   try {
-    return NextResponse.json({ calendars: DEFAULT_CALENDARS });
+    return NextResponse.json({ data: DEFAULT_CALENDARS });
   } catch (error) {
     console.error("Error fetching calendars:", error);
-    return NextResponse.json({ error: "Failed to fetch calendars" }, { status: 500 });
+    return NextResponse.json(
+      { error: ApiErrorBuilder.internalError("Failed to fetch calendars") },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
+    if (!body.name) {
+      return NextResponse.json(
+        { error: ApiErrorBuilder.validationError("Calendar name is required", { field: "name" }) },
+        { status: 422 }
+      );
+    }
+
     const calendar = {
       id: body.id || `cal_${Date.now()}`,
       name: body.name,
@@ -27,9 +38,12 @@ export async function POST(request: NextRequest) {
       visible: body.visible ?? true,
     };
     
-    return NextResponse.json({ success: true, calendar }, { status: 201 });
+    return NextResponse.json({ data: calendar }, { status: 201 });
   } catch (error) {
     console.error("Error creating calendar:", error);
-    return NextResponse.json({ error: "Failed to create calendar" }, { status: 500 });
+    return NextResponse.json(
+      { error: ApiErrorBuilder.internalError("Failed to create calendar") },
+      { status: 500 }
+    );
   }
 }

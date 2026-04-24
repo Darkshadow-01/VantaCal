@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { encryptedLocalStorage as localStorage, type LocalEvent } from "./localStorage";
-import { encrypt, decrypt, isEncryptionAvailable } from "./encryption";
+import { encryptData, decryptData, isEncryptionAvailable } from "./e2ee";
 
 export interface EncryptedMemory {
   id: string;
@@ -199,8 +199,9 @@ export function useOfflineSync() {
 export async function encryptMemoryForAI(
   memory: Omit<EncryptedMemory, "encryptedContent">
 ): Promise<EncryptedMemory> {
-  const encryptedContent = await encrypt(memory.content);
-  
+  const contentObj = { content: memory.content };
+  const encryptedContent = await encryptData(contentObj);
+
   return {
     ...memory,
     encryptedContent: JSON.stringify(encryptedContent),
@@ -212,7 +213,8 @@ export async function decryptMemoryFromAI(
 ): Promise<string> {
   try {
     const data = JSON.parse(encrypted.encryptedContent);
-    return await decrypt(data);
+    const decrypted = await decryptData<{ content: string }>(data);
+    return decrypted.content;
   } catch {
     return encrypted.content;
   }

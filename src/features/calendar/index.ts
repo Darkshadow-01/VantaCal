@@ -1,21 +1,25 @@
 // Calendar Feature - Public API
+// Types from domain (canonical source)
 export type { 
   CalendarEvent, 
-  CalendarEventType, 
   RecurrenceConfig, 
+  RecurrenceType,
   Calendar, 
   ViewType, 
   Settings, 
   SyncStatus, 
   CalendarPermission, 
   SharedCalendar, 
-  TodayDate 
-} from "./model/types";
+  TodayDate,
+  EventInput
+} from "@/src/domain/calendar/event";
 
-export { DEFAULT_SETTINGS, DEFAULT_CALENDARS } from "./model/types";
+export { DEFAULT_SETTINGS, DEFAULT_CALENDARS } from "@/src/domain/calendar/event";
 
-export { expandRecurringEvents, getEventsForDate, type EventWithRecurrence, type RecurrenceType, type RecurrenceConfig as RecurrenceServiceConfig } from "./service/recurrence";
+// Services
+export { expandRecurringEvents, getEventsForDate, type EventWithRecurrence, type RecurrenceConfig as RecurrenceServiceConfig } from "./service/recurrence";
 
 export { detectConflicts, type ConflictInfo } from "./service/conflict-detection";
 
-export { useCalendarEvents, type EventInput } from "./hooks/useCalendarEvents";
+// Hooks
+export { useCalendarEvents, useCalendarEventsBase, type UseCalendarEventsState } from "./hooks/useCalendarEvents";

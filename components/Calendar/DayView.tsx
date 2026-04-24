@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { format, isSameDay, setHours, setMinutes, addDays, startOfDay } from "date-fns";
+import { format, isSameDay, setHours, setMinutes, addDays, startOfDay, differenceInMilliseconds } from "date-fns";
 import { DndContext, DragEndEvent, DragOverlay, useDraggable, useDroppable, DragStartEvent } from "@dnd-kit/core";
 import { Clock } from "lucide-react";
 import { EventBlock } from "./EventBlock";
@@ -9,6 +9,8 @@ import type { CalendarEvent } from "@/lib/types";
 import type { BufferBlock } from "@/lib/schedulerWithBuffers";
 import { expandRecurringEvents, type EventWithRecurrence } from "@/src/features/calendar";
 import { cn } from "@/lib/utils";
+import { TimezoneService } from "@/src/domain/calendar/services/TimezoneService";
+import { utcToLocal } from "@/src/domain/calendar/utils/timezone-events";
 
 interface DailyViewProps {
   date: Date;
@@ -26,7 +28,6 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function calculateEventColumns(events: CalendarEvent[]): Map<string, { column: number; totalColumns: number }> {
   const result = new Map<string, { column: number; totalColumns: number }>();
-  
   if (events.length === 0) return result;
   
   const sortedEvents = [...events]
@@ -34,7 +35,6 @@ function calculateEventColumns(events: CalendarEvent[]): Map<string, { column: n
     .sort((a, b) => a.startTime! - b.startTime!);
   
   const placed: CalendarEvent[] = [];
-  
   for (const event of sortedEvents) {
     const eventKey = event.id;
     const startTime = event.startTime!;
@@ -56,55 +56,7 @@ function calculateEventColumns(events: CalendarEvent[]): Map<string, { column: n
     placed.splice(column, 0, event);
     result.set(eventKey, { column, totalColumns: placed.length });
   }
-  
   return result;
-}
-
-function DraggableEvent({ event, systemColors, onClick }: { 
-  event: CalendarEvent; 
-  systemColors: Record<string, any>;
-  onClick?: (e: React.MouseEvent) => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: event.id,
-    data: event,
-  });
-
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    zIndex: isDragging ? 1000 : 1,
-    opacity: isDragging ? 0.8 : 1,
-  } : undefined;
-
-  if (!event.startTime) return null;
-  
-  const startDate = new Date(event.startTime);
-  const top = startDate.getHours() * 60 + startDate.getMinutes();
-  const duration = event.endTime && event.startTime 
-    ? (event.endTime - event.startTime) / (1000 * 60) 
-    : 60;
-  const height = Math.max(duration, 20);
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onClick?.(e);
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ ...style, position: "absolute", top: `${top}px`, left: 4, right: 4 }}
-      {...listeners}
-      {...attributes}
-    >
-      <EventBlock 
-        event={event} 
-                systemColors={systemColors[event.system as keyof typeof systemColors] || { bg: "bg-blue-500", bgLight: "bg-blue-50 dark:bg-blue-500/60", border: "border-blue-500", text: "text-blue-700 dark:text-blue-400", hover: "hover:bg-blue-50 dark:hover:bg-blue-500/70" }}
-        onClick={handleClick}
-        style={{ top: "0px", height: `${height}px` }}
-      />
-    </div>
-  );
 }
 
 function DroppableHour({ hour, onClick, children }: {
@@ -130,7 +82,7 @@ function DroppableHour({ hour, onClick, children }: {
   );
 }
 
-export function DayView({ 
+export function DayView({
   date, 
   events, 
   buffers, 
@@ -143,15 +95,18 @@ export function DayView({
 }: DailyViewProps) {
   const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null);
 
-  const dayEvents = useMemo(() => {
-    return expandRecurringEvents(events as unknown as EventWithRecurrence[], date, "daily") as unknown as CalendarEvent[];
-  }, [events, date]);
+  const dayStart = useMemo(() => startOfDay(date).getTime(), [date]);
+  const dayEnd = useMemo(() => dayStart + 86400000, [dayStart]);
+  const userTz = TimezoneService.getDefault();
 
-  const dayBuffers = useMemo(() => {
-    return buffers.filter((buffer) => {
-      return isSameDay(new Date(buffer.startTime), date);
-    });
-  }, [buffers, date]);
+  const dayEvents = useMemo(() => {
+    return events
+      .filter(e => e.startTime && e.endTime)
+      .filter(e => e.startTime! >= dayStart && e.startTime! < dayEnd)
+      .sort((a, b) => a.startTime! - b.startTime!);
+  }, [events, dayStart, dayEnd]);
+
+  const eventColumns = useMemo(() => calculateEventColumns(dayEvents), [dayEvents]);
 
   const now = useMemo(() => new Date(), []);
   const currentHour = now.getHours();
@@ -192,17 +147,14 @@ export function DayView({
     onEventMove(eventData.id, newStartTime.getTime(), newEndTime.getTime());
   };
 
-  const eventColumns = useMemo(() => {
-    return calculateEventColumns(dayEvents);
-  }, [dayEvents]);
-
   const currentTimePosition = useMemo(() => {
     return currentHour * 60 + now.getMinutes();
   }, [currentHour, now]);
-
+  
   const getEventPosition = (event: CalendarEvent) => {
     if (!event.startTime) return { top: "0%", height: "100%" };
-    const startDate = new Date(event.startTime);
+    const startLocal = utcToLocal(event.startTime, event.startTimezone || userTz);
+    const startDate = new Date(startLocal.year, startLocal.month, startLocal.day, startLocal.hour, startLocal.minute);
     const top = startDate.getHours() * 60 + startDate.getMinutes();
     const duration = event.endTime && event.startTime 
       ? (event.endTime - event.startTime) / (1000 * 60) 
@@ -211,7 +163,8 @@ export function DayView({
   };
 
   const getBufferPosition = (buffer: BufferBlock) => {
-    const startDate = new Date(buffer.startTime);
+    const startLocal = utcToLocal(buffer.startTime, userTz);
+    const startDate = new Date(startLocal.year, startLocal.month, startLocal.day, startLocal.hour, startLocal.minute);
     const top = startDate.getHours() * 60 + startDate.getMinutes();
     return { top: `${top}px`, height: `${buffer.duration}px` };
   };
@@ -260,8 +213,10 @@ export function DayView({
             {/* Render events with column layout */}
             {dayEvents.map((event) => {
               if (!event.startTime || !event.endTime) return null;
-              const startDate = new Date(event.startTime);
-              const endDate = new Date(event.endTime);
+              const startLocal = utcToLocal(event.startTime, event.startTimezone || userTz);
+              const endLocal = utcToLocal(event.endTime, event.startTimezone || userTz);
+              const startDate = new Date(startLocal.year, startLocal.month, startLocal.day, startLocal.hour, startLocal.minute);
+              const endDate = new Date(endLocal.year, endLocal.month, endLocal.day, endLocal.hour, endLocal.minute);
               
               const startHour = startDate.getHours();
               const startMinutes = startDate.getMinutes();
@@ -311,7 +266,7 @@ export function DayView({
 
           {/* Buffer blocks */}
           <div className="absolute left-20 right-2 top-12 bottom-0 pointer-events-none">
-            {dayBuffers.map((buffer) => {
+            {buffers.filter(b => b.startTime >= dayStart && b.startTime < dayEnd).map((buffer) => {
               const { top, height } = getBufferPosition(buffer);
               return (
                 <div

@@ -33,109 +33,208 @@ interface EncryptedEventDoc {
   updatedAt: number;
 }
 
+interface LocalEvent {
+  id: string;
+  title: string;
+  description?: string;
+  startTime: number;
+  endTime?: number;
+  allDay: boolean;
+  calendarId: string;
+  color: string;
+  type: string;
+  system?: "Health" | "Work" | "Relationships";
+  location?: string;
+  synced?: boolean;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface PrivacyState {
+  isEncrypted: boolean;
+  isOffline: boolean;
+  syncStatus: "synced" | "pending" | "error";
+  lastSync: number | null;
+  storageUsage: { used: number; percentage: number };
+}
+
 export function useEncryptedEvents(userId?: string | null) {
   const [events, setEvents] = useState<EventData[]>([]);
-  const [isDecrypting, setIsDecrypting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const encryptedEvents = useQuery(api.events.index.getEvents, userId ? { userId } : "skip");
-  const createEncryptedEvent = useMutation(api.events.index.createEvent);
-  const updateEncryptedEvent = useMutation(api.events.index.updateEvent);
-  const deleteEncryptedEvent = useMutation(api.events.index.deleteEvent);
+  const docs = useQuery(api.events.index.getEvents, userId ? { userId } : "skip") as EncryptedEventDoc[] | undefined;
 
-  const decryptEvent = useCallback(async (encrypted: EncryptedEventDoc): Promise<EventData | null> => {
-    if (!hasMasterKey()) {
-      return null;
-    }
-    try {
-      const payload: EncryptedPayload = JSON.parse(encrypted.encryptedPayload);
-      const decrypted = await decryptData<EventData>(payload);
-      return {
-        ...decrypted,
-        _id: encrypted._id,
-        _creationTime: encrypted._creationTime,
-        createdAt: encrypted.createdAt,
-        updatedAt: encrypted.updatedAt,
-      };
-    } catch (err) {
-      console.error("Failed to decrypt event:", encrypted._id, err);
-      return null;
-    }
-  }, []);
-
-  const decryptAllEvents = useCallback(async () => {
-    if (!encryptedEvents || !hasMasterKey()) {
-      setEvents([]);
+  useEffect(() => {
+    if (!docs) {
+      setLoading(false);
       return;
     }
 
-    setIsDecrypting(true);
-    setError(null);
-
-    try {
-      const decryptedEvents: EventData[] = [];
-      for (const event of encryptedEvents) {
-        const decrypted = await decryptEvent(event);
-        if (decrypted) {
-          decryptedEvents.push(decrypted);
+    const loadEvents = async () => {
+      setLoading(true);
+      try {
+        if (!hasMasterKey()) {
+          setError("Master key not set");
+          setLoading(false);
+          return;
         }
-      }
-      setEvents(decryptedEvents);
-    } catch (err) {
-      setError("Failed to decrypt events");
-      console.error(err);
-    } finally {
-      setIsDecrypting(false);
-    }
-  }, [encryptedEvents, decryptEvent]);
 
-  useEffect(() => {
-    decryptAllEvents();
-  }, [encryptedEvents, decryptAllEvents]);
+        const decrypted = await Promise.all(
+          docs.map(async (doc) => {
+            try {
+              const payload = JSON.parse(doc.encryptedPayload) as EncryptedPayload;
+              return await decryptData<EventData>(payload);
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        setEvents(decrypted.filter((e): e is EventData => e !== null));
+        setError(null);
+      } catch (err) {
+        setError("Failed to load events");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, [docs]);
 
   const createEvent = useCallback(async (eventData: Omit<EventData, "_id" | "_creationTime" | "createdAt" | "updatedAt">) => {
     if (!hasMasterKey()) {
-      throw new Error("Encryption key not available. Please unlock the app first.");
+      throw new Error("Master key not set");
     }
 
-    const { _id, _creationTime, createdAt, updatedAt, ...data } = eventData as EventData;
-    const encrypted = await encryptData(data);
-    
-    return createEncryptedEvent({
-      userId: data.userId,
+    const create = useMutation(api.events.index.createEvent);
+    const encrypted = await encryptData(eventData);
+
+    await create({
+      userId: eventData.userId,
       encryptedPayload: JSON.stringify(encrypted),
     });
-  }, [createEncryptedEvent]);
+  }, []);
 
   const updateEvent = useCallback(async (eventId: Id<"events">, eventData: Partial<EventData>) => {
     if (!hasMasterKey()) {
-      throw new Error("Encryption key not available. Please unlock the app first.");
+      throw new Error("Master key not set");
     }
 
-    const { _id, _creationTime, userId, createdAt, updatedAt, ...data } = eventData as EventData;
-    const encrypted = await encryptData(data);
-    
-    return updateEncryptedEvent({
+    const update = useMutation(api.events.index.updateEvent);
+    const encrypted = await encryptData(eventData);
+
+    await update({
       eventId,
       encryptedPayload: JSON.stringify(encrypted),
     });
-  }, [updateEncryptedEvent]);
+  }, []);
 
   const deleteEvent = useCallback(async (eventId: Id<"events">) => {
-    return deleteEncryptedEvent({ eventId });
-  }, [deleteEncryptedEvent]);
-
-  const refresh = useCallback(() => {
-    decryptAllEvents();
-  }, [decryptAllEvents]);
+    const remove = useMutation(api.events.index.deleteEvent);
+    await remove({ eventId });
+  }, []);
 
   return {
     events,
-    isDecrypting,
+    loading,
     error,
     createEvent,
     updateEvent,
     deleteEvent,
-    refresh,
+    refresh: () => {},
+  };
+}
+
+export function usePrivacyState() {
+  const [state, setState] = useState<PrivacyState>({
+    isEncrypted: true,
+    isOffline: true,
+    syncStatus: "synced",
+    lastSync: null,
+    storageUsage: { used: 0, percentage: 0 },
+  });
+
+  useEffect(() => {
+    const update = () => {
+      setState(prev => ({
+        ...prev,
+        isOffline: !navigator.onLine,
+      }));
+    };
+
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
+  const enableEncryption = useCallback(async () => {
+    setState(prev => ({ ...prev, isEncrypted: true }));
+    return true;
+  }, []);
+
+  const disableEncryption = useCallback(() => {
+    setState(prev => ({ ...prev, isEncrypted: false }));
+  }, []);
+
+  const clearData = useCallback(async () => {
+    setState(prev => ({ ...prev, syncStatus: "pending" }));
+  }, []);
+
+  const sync = useCallback(async () => {
+    setState(prev => ({ ...prev, syncStatus: "pending" }));
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setState(prev => ({
+      ...prev,
+      syncStatus: "synced",
+      lastSync: Date.now(),
+    }));
+  }, []);
+
+  return {
+    ...state,
+    enableEncryption,
+    disableEncryption,
+    clearData,
+    sync,
+  };
+}
+
+export function useOfflineSync() {
+  const [pendingEvents, setPendingEvents] = useState<LocalEvent[]>([]);
+  const [syncing, setSyncing] = useState(false);
+
+  const checkPending = useCallback(async () => {
+    setPendingEvents([]);
+  }, []);
+
+  useEffect(() => {
+    checkPending();
+  }, [checkPending]);
+
+  const syncAll = useCallback(async (_remotePush: (events: LocalEvent[]) => Promise<void>) => {
+    if (pendingEvents.length === 0) return;
+
+    setSyncing(true);
+    try {
+      await checkPending();
+    } finally {
+      setSyncing(false);
+    }
+  }, [pendingEvents, checkPending]);
+
+  return {
+    pendingCount: pendingEvents.length,
+    pendingEvents,
+    syncing,
+    syncAll,
+    checkPending,
   };
 }

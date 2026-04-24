@@ -1,192 +1,338 @@
-import { NextResponse } from "next/server";
+/**
+ * OpenAPI Documentation Endpoint
+ * 
+ * Returns OpenAPI 3.0 specification for the API
+ */
 
-const API_DOCS = {
-  title: "VanCal API",
-  version: "1.0.0",
-  description: "API for VanCal calendar application with webhook support",
-  baseUrl: "/api",
-  authentication: {
-    header: "x-api-key",
-    description: "Include your API key in the x-api-key header for authenticated endpoints",
+import { NextRequest, NextResponse } from "next/server";
+
+const openApiSpec = {
+  openapi: "3.0.3",
+  info: {
+    title: "Calendar API",
+    description: "E2EE Calendar Application API with versioning support",
+    version: "1.0.0",
+    contact: {
+      name: "API Support",
+    },
   },
-  permissions: [
-    "events:read - Read events",
-    "events:write - Create and update events",
-    "events:delete - Delete events",
-    "calendars:read - Read calendars",
-    "calendars:write - Create and update calendars",
-    "webhooks:read - Read webhooks",
-    "webhooks:write - Create and manage webhooks",
-    "admin - Full access",
-  ],
-  endpoints: [
+  servers: [
     {
-      method: "GET",
-      path: "/events",
-      description: "List all events with optional filtering",
-      auth: "events:read",
-      queryParams: [
-        { name: "startDate", type: "string", description: "Filter events from this date (ISO)" },
-        { name: "endDate", type: "string", description: "Filter events until this date (ISO)" },
-        { name: "calendarId", type: "string", description: "Filter by calendar ID" },
-        { name: "type", type: "string", description: "Filter by event type" },
-      ],
-      response: {
-        events: [],
-        count: 0,
-      },
+      url: "https://calendar-app.vercel.app",
+      description: "Production server",
     },
     {
-      method: "POST",
-      path: "/events",
-      description: "Create a new event",
-      auth: "events:write",
-      body: {
-        title: "string (required)",
-        date: "number (required)",
-        month: "number (required)",
-        year: "number (required)",
-        hour: "number (optional)",
-        endHour: "number (optional)",
-        color: "string (optional)",
-        type: "string (optional)",
-        calendarId: "string (optional)",
-        description: "string (optional)",
-        location: "string (optional)",
-        guests: "array (optional)",
-        reminder: "number (optional)",
-      },
-      response: {
-        success: true,
-        event: {},
-      },
-    },
-    {
-      method: "GET",
-      path: "/events/:id",
-      description: "Get a specific event",
-      auth: "events:read",
-      response: {
-        event: {},
-      },
-    },
-    {
-      method: "PUT",
-      path: "/events/:id",
-      description: "Update an event",
-      auth: "events:write",
-      response: {
-        success: true,
-        event: {},
-      },
-    },
-    {
-      method: "DELETE",
-      path: "/events/:id",
-      description: "Delete an event",
-      auth: "events:delete",
-      response: {
-        success: true,
-        message: "Event deleted",
-      },
-    },
-    {
-      method: "GET",
-      path: "/calendars",
-      description: "List all calendars",
-      auth: "calendars:read",
-      response: {
-        calendars: [],
-      },
-    },
-    {
-      method: "POST",
-      path: "/calendars",
-      description: "Create a new calendar",
-      auth: "calendars:write",
-      body: {
-        name: "string (required)",
-        color: "string (optional)",
-        visible: "boolean (optional)",
-      },
-    },
-    {
-      method: "GET",
-      path: "/webhooks",
-      description: "List all webhooks",
-      auth: "webhooks:read",
-      response: {
-        webhooks: [],
-      },
-    },
-    {
-      method: "POST",
-      path: "/webhooks",
-      description: "Register a new webhook",
-      auth: "webhooks:write",
-      body: {
-        url: "string (required) - HTTPS URL",
-        events: "array (required) - Array of event types",
-        secret: "string (optional) - Custom secret for signing",
-      },
-      events: [
-        "event.created",
-        "event.updated",
-        "event.deleted",
-        "event.completed",
-        "calendar.created",
-        "calendar.updated",
-        "calendar.deleted",
-      ],
-    },
-    {
-      method: "PUT",
-      path: "/webhooks/:id",
-      description: "Update a webhook",
-      auth: "webhooks:write",
-    },
-    {
-      method: "DELETE",
-      path: "/webhooks/:id",
-      description: "Delete a webhook",
-      auth: "webhooks:write",
-    },
-    {
-      method: "POST",
-      path: "/webhooks/:id/test",
-      description: "Test a webhook",
-      auth: "webhooks:write",
-    },
-    {
-      method: "GET",
-      path: "/keys",
-      description: "List all API keys",
-      auth: "admin",
-    },
-    {
-      method: "POST",
-      path: "/keys",
-      description: "Create a new API key",
-      auth: "admin",
-      body: {
-        name: "string (required)",
-        permissions: "array (required)",
-      },
+      url: "http://localhost:3000",
+      description: "Development server",
     },
   ],
-  webhookPayload: {
-    event: "string",
-    timestamp: "number",
-    data: {},
+  paths: {
+    "/api/v1/events": {
+      get: {
+        summary: "List events",
+        description: "Retrieve a paginated list of events",
+        parameters: [
+          {
+            name: "page",
+            in: "query",
+            description: "Page number (default: 1)",
+            schema: { type: "integer", default: 1 },
+          },
+          {
+            name: "pageSize",
+            in: "query",
+            description: "Items per page (default: 20, max: 100)",
+            schema: { type: "integer", default: 20 },
+          },
+          {
+            name: "startDate",
+            in: "query",
+            description: "Filter events from this date (ISO 8601)",
+            schema: { type: "string", format: "date-time" },
+          },
+          {
+            name: "endDate",
+            in: "query",
+            description: "Filter events until this date (ISO 8601)",
+            schema: { type: "string", format: "date-time" },
+          },
+          {
+            name: "calendarId",
+            in: "query",
+            description: "Filter by calendar ID",
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Successful response",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/Event" },
+                    },
+                    meta: {
+                      $ref: "#/components/schemas/PaginationMeta",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        summary: "Create event",
+        description: "Create a new calendar event",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/EventInput",
+              },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Event created",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/Event" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/events/{id}": {
+      get: {
+        summary: "Get event",
+        description: "Retrieve a single event by ID",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "Event ID",
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Successful response",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/Event" },
+                  },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Event not found",
+          },
+        },
+      },
+      patch: {
+        summary: "Update event",
+        description: "Update an existing event",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "Event ID",
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/EventInput",
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Event updated",
+          },
+          "404": {
+            description: "Event not found",
+          },
+        },
+      },
+      delete: {
+        summary: "Delete event",
+        description: "Delete an event by ID",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "Event ID",
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Event deleted",
+          },
+          "404": {
+            description: "Event not found",
+          },
+        },
+      },
+    },
+    "/api/v1/calendars": {
+      get: {
+        summary: "List calendars",
+        description: "Retrieve a list of calendars",
+        responses: {
+          "200": {
+            description: "Successful response",
+          },
+        },
+      },
+      post: {
+        summary: "Create calendar",
+        description: "Create a new calendar",
+        responses: {
+          "201": {
+            description: "Calendar created",
+          },
+        },
+      },
+    },
   },
-  webhookHeaders: {
-    "Content-Type": "application/json",
-    "X-Webhook-Event": "event type",
-    "X-Webhook-Timestamp": "timestamp",
-    "X-Webhook-Signature": "signature (if secret configured)",
+  components: {
+    schemas: {
+      Event: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          startTime: { type: "integer", description: "Unix timestamp" },
+          endTime: { type: "integer", description: "Unix timestamp" },
+          allDay: { type: "boolean" },
+          calendarId: { type: "string" },
+          color: { type: "string" },
+          type: { type: "string" },
+          system: { type: "string" },
+          completed: { type: "boolean" },
+          guests: { type: "array", items: { type: "string" } },
+          location: { type: "string" },
+          description: { type: "string" },
+        },
+      },
+      EventInput: {
+        type: "object",
+        required: ["title", "startTime"],
+        properties: {
+          title: { type: "string" },
+          startTime: { type: "integer" },
+          endTime: { type: "integer" },
+          allDay: { type: "boolean" },
+          calendarId: { type: "string" },
+          color: { type: "string" },
+          type: { type: "string" },
+          system: { type: "string" },
+          guests: { type: "array", items: { type: "string" } },
+          location: { type: "string" },
+          description: { type: "string" },
+        },
+      },
+      PaginationMeta: {
+        type: "object",
+        properties: {
+          page: { type: "integer" },
+          pageSize: { type: "integer" },
+          total: { type: "integer" },
+          totalPages: { type: "integer" },
+          hasNext: { type: "boolean" },
+          hasPrev: { type: "boolean" },
+        },
+      },
+      ApiError: {
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+          details: { type: "object" },
+          timestamp: { type: "string" },
+        },
+      },
+    },
   },
+  tags: [
+    {
+      name: "Events",
+      description: "Event operations",
+    },
+    {
+      name: "Calendars",
+      description: "Calendar operations",
+    },
+  ],
 };
 
-export async function GET() {
-  return NextResponse.json(API_DOCS);
+export async function GET(request: NextRequest) {
+  const format = request.nextUrl.searchParams.get("format");
+  
+  if (format === "yaml") {
+    const yaml = `# OpenAPI Specification
+# Convert JSON to YAML for display
+
+openapi: "${openApiSpec.openapi}"
+info:
+  title: "${openApiSpec.info.title}"
+  description: "${openApiSpec.info.description}"
+  version: "${openApiSpec.info.version}"
+
+servers:
+  - url: "${openApiSpec.servers[0].url}"
+    description: "${openApiSpec.servers[0].description}"
+  - url: "${openApiSpec.servers[1].url}"
+    description: "${openApiSpec.servers[1].description}"
+
+# Full JSON spec available at /api/docs?format=json
+`;
+    return new NextResponse(yaml, {
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
+  }
+
+  return NextResponse.json(openApiSpec, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    headers: {
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
 }

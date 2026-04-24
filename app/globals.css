@@ -3,131 +3,133 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ========================
+   LIGHT MODE (DEFAULT)
+   Warm vintage paper aesthetic
+   ======================== */
 :root {
-  /* Light Mode - Modern Minimalist (Grayscale) */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #D3D3D3;
-  --bg-elevated: #FAFAFA;
-  
-  --text-primary: #36454F;
-  --text-secondary: #708090;
-  --text-muted: #A8A8A8;
-  
-  --accent: #36454F;
-  --accent-contrast: #FFFFFF;
-  
-  --border: #D3D3D3;
-  --border-subtle: #E8E8E8;
-  
+  /* Light mode - warm vintage paper */
+  --bg-primary: #FAF6F1;
+  --bg-secondary: #EDE5D8;
+  --bg-elevated: #FFFFFF;
+  --bg-glass: rgba(255, 255, 255, 0.8);
+
+  --text-primary: #2D2519;
+  --text-secondary: #5C4F3D;
+  --text-muted: #8A7E6E;
+
+  --accent: #996D2A;
+  --accent-dim: #CC8F33;
+  --accent-glow: 0 0 15px rgba(153, 109, 42, 0.3);
+
+  --border: #D4C8B8;
+  --border-subtle: #E8DFD2;
+  --border-glow: rgba(153, 109, 42, 0.1);
+
   /* System Colors */
-  --system-health: #16A34A;
-  --system-health-light: #DCFCE7;
-  --system-work: #2563EB;
-  --system-work-light: #DBEAFE;
-  --system-relationships: #9333EA;
-  --system-relationships-light: #F3E8FF;
-  
+  --system-health: #FF6B6B;
+  --system-work: #4ECDC4;
+  --system-relationships: #FFE66D;
+
   /* Semantic */
-  --danger: #DC2626;
-  --danger-light: #FEE2E2;
-  --warning: #F59E0B;
-  --warning-light: #FEF3C7;
-  --success: #16A34A;
-  --success-light: #DCFCE7;
-  
+  --danger: #FF6B6B;
+  --warning: #FFE66D;
+  --success: #4ECDC4;
+
   /* UI Elements */
-  --card: 36 28% 97%;
-  --card-foreground: 30 6% 17%;
-  --popover: 36 28% 97%;
-  --popover-foreground: 30 6% 17%;
-  --primary: 30 6% 17%;
-  --primary-foreground: 36 28% 97%;
-  --secondary: 36 28% 97%;
-  --secondary-foreground: 30 6% 17%;
-  --muted: 0 0% 66%;
-  --muted-foreground: 0 0% 40%;
-  --accent-legacy: 0 0% 66%;
-  --accent-legacy-foreground: 30 6% 17%;
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: 210 40% 98%;
-  --ring: 30 6% 17%;
-  --radius: 0.625rem;
-  
-  /* Sidebar */
-  --sidebar: 36 28% 97%;
-  --sidebar-foreground: 30 6% 17%;
-  --sidebar-primary: 30 6% 17%;
-  --sidebar-primary-foreground: 36 28% 97%;
-  --sidebar-accent: 0 0% 85%;
-  --sidebar-accent-foreground: 30 6% 17%;
-  --sidebar-border: 0 0% 85%;
-  --sidebar-ring: 30 6% 17%;
-  
-  /* Chart */
-  --chart-1: 0 0% 20%;
-  --chart-2: 0 0% 40%;
-  --chart-3: 0 0% 60%;
-  --chart-4: 0 0% 70%;
-  --chart-5: 0 0% 80%;
+  --card: 35 15% 96%;
+  --card-foreground: 30 8% 12%;
+  --popover: 35 15% 96%;
+  --popover-foreground: 30 8% 12%;
+  --primary: 30 8% 12%;
+  --primary-foreground: 35 15% 96%;
+  --secondary: 35 15% 92%;
+  --secondary-foreground: 30 8% 12%;
+  --muted: 35 10% 88%;
+  --muted-foreground: 30 5% 45%;
+  --accent-legacy: 35 20% 60%;
+  --accent-legacy-foreground: 30 8% 12%;
+  --destructive: 0 72% 63%;
+  --destructive-foreground: 35 15% 96%;
+  --ring: 30 8% 70%;
+  --radius: 0.75rem;
+
+  /* Glass settings */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(153, 109, 42, 0.08);
+  --glass-blur: blur(20px);
+
+  /* Animations */
+  --ease-retro: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-glow: ease-in-out;
+
+  /* Retro amber (for compatibility) */
+  --retro-amber: #996D2A;
+  --retro-amber-dim: #CC8F33;
+  --retro-amber-glow: rgba(153, 109, 42, 0.3);
 }
 
+/* ========================
+   DARK MODE
+   Retro-futuristic glass aesthetic
+   ======================== */
 .dark {
-  /* Dark Mode - Modern Minimalist */
-  --bg-primary: #36454F;
-  --bg-secondary: #2D3A44;
-  --bg-elevated: #485963;
-  
-  --text-primary: #FFFFFF;
-  --text-secondary: #D3D3D3;
-  --text-muted: #A8A8A8;
-  
-  --accent: #FFFFFF;
-  --accent-contrast: #36454F;
-  
-  --border: #485963;
-  --border-subtle: #36454F;
-  
+  /* Warm Amber Base - like old phosphor screens */
+  --retro-amber: #FFB347;
+  --retro-amber-dim: #CC8F33;
+  --retro-amber-glow: rgba(255, 179, 71, 0.4);
+
+  /* Midnight backdrop */
+  --bg-primary: #0F0F0F;
+  --bg-secondary: #1A1714;
+  --bg-elevated: #252220;
+  --bg-glass: rgba(26, 23, 20, 0.85);
+
+  /* Text - warm off-white */
+  --text-primary: #F5F0E8;
+  --text-secondary: #C4B8A8;
+  --text-muted: #8A7E6E;
+
+  /* Accent - phosphor amber glow */
+  --accent: #FFB347;
+  --accent-dim: #996D2A;
+  --accent-glow: 0 0 20px rgba(255, 179, 71, 0.5);
+
+  /* Borders - subtle amber tint */
+  --border: #3D3632;
+  --border-subtle: #2A2522;
+  --border-glow: rgba(255, 179, 71, 0.2);
+
+  /* System Colors - retro versions */
+  --system-health: #FF6B6B;
+  --system-work: #4ECDC4;
+  --system-relationships: #FFE66D;
+
   /* Semantic */
-  --danger: #F87171;
-  --danger-light: #7F1D1D;
-  --warning: #FBBF24;
-  --warning-light: #78350F;
-  --success: #4ADE80;
-  --success-light: #14532D;
-  
-  /* UI Elements */
-  --card: 30 10% 22%;
-  --card-foreground: 36 28% 97%;
-  --popover: 30 10% 22%;
-  --popover-foreground: 36 28% 97%;
-  --primary: 36 28% 97%;
-  --primary-foreground: 30 6% 17%;
-  --secondary: 30 10% 22%;
-  --secondary-foreground: 36 28% 97%;
-  --muted: 0 0% 40%;
-  --muted-foreground: 0 0% 66%;
-  --accent-legacy: 30 10% 22%;
-  --accent-legacy-foreground: 36 28% 97%;
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: 210 40% 98%;
-  --ring: 0 0% 85%;
-  
-  /* Sidebar */
-  --sidebar: 30 6% 17%;
-  --sidebar-foreground: 36 28% 97%;
-  --sidebar-primary: 36 28% 97%;
-  --sidebar-primary-foreground: 30 6% 17%;
-  --sidebar-accent: 30 10% 22%;
-  --sidebar-accent-foreground: 36 28% 97%;
-  --sidebar-border: 0 0% 20%;
-  --sidebar-ring: 0 0% 85%;
-  
-  /* Chart */
-  --chart-1: 0 0% 85%;
-  --chart-2: 0 0% 65%;
-  --chart-3: 0 0% 45%;
-  --chart-4: 0 0% 30%;
-  --chart-5: 0 0% 20%;
+  --danger: #FF6B6B;
+  --warning: #FFE66D;
+  --success: #4ECDC4;
+
+  /* UI Elements - Glass + Retro */
+  --card: 30 8% 12%;
+  --card-foreground: 35 20% 92%;
+  --popover: 30 8% 12%;
+  --popover-foreground: 35 20% 92%;
+  --primary: 35 20% 92%;
+  --primary-foreground: 30 8% 12%;
+  --secondary: 30 8% 16%;
+  --secondary-foreground: 35 20% 92%;
+  --muted: 30 5% 25%;
+  --muted-foreground: 35 15% 60%;
+  --accent-legacy: 35 20% 60%;
+  --accent-legacy-foreground: 30 8% 12%;
+  --destructive: 0 72% 63%;
+  --destructive-foreground: 35 20% 92%;
+  --ring: 35 20% 60%;
+
+  /* Glass settings */
+  --glass-bg: rgba(26, 23, 20, 0.7);
+  --glass-border: rgba(255, 179, 71, 0.1);
 }
 
 @theme inline {

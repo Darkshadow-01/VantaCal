@@ -3,9 +3,15 @@ export interface CalendarEvent {
   title: string;
   description?: string;
 
+  // Times stored as UTC timestamp (milliseconds since epoch)
   startTime: number;
   endTime?: number;
   allDay: boolean;
+
+  // Timezone metadata - critical for cross-timezone correctness
+  // startTimezone: timezone where the event was originally created
+  // If absent, assume user's current timezone at time of creation
+  startTimezone?: string;
 
   calendarId: string;
   color: string;
@@ -48,6 +54,20 @@ export interface CalendarEvent {
   version: number;
   updatedAt: number;
   deleted?: boolean;
+}
+
+export interface EventInput {
+  userId: string;
+  title: string;
+  description?: string;
+  startTime: number;
+  endTime: number;
+  allDay: boolean;
+  system: "Health" | "Work" | "Relationships";
+  color?: string;
+  recurrence?: string;
+  location?: string;
+  startTimezone?: string; // Timezone where event was created
 }
 
 export type RecurrenceType = "daily" | "weekly" | "biweekly" | "monthly" | "yearly" | "none" | "custom";
@@ -176,7 +196,7 @@ export const DEFAULT_CALENDARS: Calendar[] = [
 export function normalizeEvent(oldEvent: Record<string, unknown>): CalendarEvent {
   const now = Date.now();
   let startTime: number;
-  
+
   if (typeof oldEvent.startTime === 'number') {
     startTime = oldEvent.startTime;
   } else if (
@@ -210,6 +230,7 @@ export function normalizeEvent(oldEvent: Record<string, unknown>): CalendarEvent
     startTime,
     endTime,
     allDay: Boolean(oldEvent.allDay),
+    startTimezone: typeof oldEvent.startTimezone === 'string' ? oldEvent.startTimezone : undefined,
     calendarId: typeof oldEvent.calendarId === 'string' ? oldEvent.calendarId : "personal",
     color: typeof oldEvent.color === 'string' ? oldEvent.color : "#4F8DFD",
     type: typeof oldEvent.type === 'string' ? oldEvent.type : "event",

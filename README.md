@@ -10,17 +10,13 @@ VanCal is a next-generation calendar application that combines intelligent sched
 
 ## Current Status
 
-✅ **Build Passing** | ✅ **Production Ready** | 🏆 **Ship-Ready (8.0+/10)**
+✅ **Build Passing** | ✅ **Production Ready** (with demo mode)
 
-### Recently Fixed Issues (v2.0 Production Hardening)
-- ✅ Vault state machine with LOCKED/UNLOCKED/NO_KEY states
-- ✅ In-app vault setup with auto-unlock
-- ✅ Visible vault state (badge + warning banner)
-- ✅ Background sync (non-blocking)
-- ✅ Worker error recovery
-- ✅ Session data warning
-- ✅ Migration safety
-- ✅ Data deduplication
+### Recently Fixed Issues
+- Clerk authentication now works properly
+- Fixed "Hooks called in wrong order" React errors in modals
+- Demo mode with localStorage persistence
+- Clean build with no TypeScript errors
 
 ## ✨ Features
 
@@ -45,12 +41,6 @@ VanCal automatically calculates and suggests buffer time between events based on
 - System balance analysis
 - Personalized recommendations
 
-#### 🎙️ Voice & Text AI Assistant
-- **Voice Input**: Speak naturally to create events ("Meeting with John tomorrow at 3pm")
-- **Text Input**: Type natural language for AI parsing
-- **Location**: Both in toolbar (sparkle icon) and in EventModal ("Add with AI")
-- **Provider**: Uses Ollama (local) or OpenAI (external)
-
 ### 📅 Event Management
 
 #### Create Events
@@ -62,25 +52,9 @@ VanCal automatically calculates and suggests buffer time between events based on
 #### Event Details
 - Title, description, location
 - System tag (Health, Work, Relationships)
-- Custom colors (9 color options)
-- Recurrence patterns with end date options
-- Reminder notifications (5min to 1 day before)
-- Guests/attendees email management
-
-### 📥 Import/Export
-- ICS file import and export
-- Compatible with Google Calendar, Apple Calendar, Outlook
-
-### ⚙️ Settings
-- Time zone selection
-- Default view preference
-- Start week on (Sunday/Monday)
-- Working hours configuration
-- Dark mode toggle
-- Theme color selection
-- Compact view option
-- Push & email notifications
-- Default reminder time
+- Custom colors
+- Recurrence patterns
+- Reminder notifications
 
 ### 🎨 System Color Coding
 

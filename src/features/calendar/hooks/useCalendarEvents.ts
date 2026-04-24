@@ -1,36 +1,18 @@
-"use client";
+/**
+ * @deprecated Use useEventRepository + useCases instead
+ * This hook mixes UI + business logic + infrastructure
+ * 
+ * New approach:
+ * - useEventRepository: gets IEventRepository adapter
+ * - CreateEventUseCase: handles business logic
+ * - useCalendarEvents: UI state only
+ */
 
-import { useCallback, useMemo, useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
-import { encryptData, decryptData, hasMasterKey, type EncryptedPayload } from "@/features/encryption/service/e2ee";
-import type { CalendarEvent, Calendar } from "@/features/calendar/model/types";
-import { DEFAULT_CALENDARS } from "@/features/calendar/model/types";
+import { useCallback, useMemo, useState } from "react";
+import type { CalendarEvent, Calendar, EventInput } from "@/src/domain/calendar/event";
+import { DEFAULT_CALENDARS } from "@/src/domain/calendar/event";
 
 const CALENDARS_KEY = "vancal-calendars";
-
-export interface EventInput {
-  userId: string;
-  title: string;
-  description?: string;
-  startTime: number;
-  endTime: number;
-  allDay: boolean;
-  system: "Health" | "Work" | "Relationships";
-  color?: string;
-  recurrence?: string;
-  location?: string;
-}
-
-interface EncryptedEventDoc {
-  _id: Id<"events">;
-  _creationTime: number;
-  userId: string;
-  encryptedPayload: string;
-  createdAt: number;
-  updatedAt: number;
-}
 
 function getInitialVisibility() {
   try {
@@ -43,11 +25,9 @@ function getInitialVisibility() {
           visibility[cal.id] = cal.visible;
         });
         return visibility;
-      } catch {
-        // ignore parse errors
-      }
+      } catch { }
     }
-  } catch { /* ignore */ }
+  } catch { }
   const defaultVisibility: Record<string, boolean> = {};
   DEFAULT_CALENDARS.forEach(cal => {
     defaultVisibility[cal.id] = cal.visible;
@@ -55,107 +35,18 @@ function getInitialVisibility() {
   return defaultVisibility;
 }
 
-export function useCalendarEvents(userId?: string | null) {
-  const [isDecrypting, setIsDecrypting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export interface UseCalendarEventsState {
+  events: CalendarEvent[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+export function useCalendarEventsBase(events: CalendarEvent[] = []) {
   const [calendarVisibility, setCalendarVisibility] = useState<Record<string, boolean>>(() => getInitialVisibility());
-
-  const encryptedEvents = useQuery(api.events.index.getEvents, userId ? { userId } : "skip");
-  const createEncryptedEvent = useMutation(api.events.index.createEvent);
-  const updateEncryptedEvent = useMutation(api.events.index.updateEvent);
-  const deleteEncryptedEvent = useMutation(api.events.index.deleteEvent);
-
-  const decryptEvent = useCallback(async (encrypted: EncryptedEventDoc): Promise<CalendarEvent | null> => {
-    if (!hasMasterKey()) {
-      return null;
-    }
-    try {
-      const payload: EncryptedPayload = JSON.parse(encrypted.encryptedPayload);
-      const decrypted = await decryptData<EventInput>(payload);
-      
-      const startTime = decrypted.startTime;
-      const now = Date.now();
-      return {
-        id: encrypted._id || `temp-${Date.now()}`,
-        title: decrypted.title,
-        startTime,
-        endTime: decrypted.endTime,
-        allDay: decrypted.allDay || false,
-        calendarId: "personal",
-        color: decrypted.color || "#4F8DFD",
-        type: (decrypted.system?.toLowerCase() as CalendarEvent["type"]) || "event",
-        system: decrypted.system,
-        completed: false,
-        description: decrypted.description,
-        location: decrypted.location,
-        version: 1,
-        updatedAt: now,
-      };
-    } catch (err) {
-      console.error("Failed to decrypt event:", encrypted._id, err);
-      return null;
-    }
-  }, []);
-
-  const events: CalendarEvent[] = useMemo(() => {
-    if (!encryptedEvents || encryptedEvents.length === 0) {
-      return [];
-    }
-    // For now, return empty during loading - decrypting happens in effect
-    return [];
-  }, [encryptedEvents]);
-
-  const decryptedEvents = useMemo(() => {
-    if (!encryptedEvents) return [];
-    
-    return encryptedEvents
-      .map((e) => {
-        try {
-          const payload: EncryptedPayload = JSON.parse(e.encryptedPayload);
-          // Note: This is sync for memo - actual decryption should be async
-          // For now, we'll handle this differently
-          return { doc: e, payload };
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean) as { doc: EncryptedEventDoc; payload: EncryptedPayload }[];
-  }, [encryptedEvents]);
-
-  const createEvent = useCallback(async (eventData: EventInput) => {
-    if (!hasMasterKey()) {
-      throw new Error("Encryption key not available. Please unlock the app first.");
-    }
-
-    const encrypted = await encryptData(eventData);
-    
-    return createEncryptedEvent({
-      userId: eventData.userId,
-      encryptedPayload: JSON.stringify(encrypted),
-    });
-  }, [createEncryptedEvent]);
-
-  const updateEvent = useCallback(async (eventId: Id<"events">, eventData: Partial<EventInput>) => {
-    if (!hasMasterKey()) {
-      throw new Error("Encryption key not available. Please unlock the app first.");
-    }
-
-    const encrypted = await encryptData(eventData);
-    
-    return updateEncryptedEvent({
-      eventId,
-      encryptedPayload: JSON.stringify(encrypted),
-    });
-  }, [updateEncryptedEvent]);
-
-  const deleteEvent = useCallback(async (eventId: Id<"events">) => {
-    return deleteEncryptedEvent({ eventId });
-  }, [deleteEncryptedEvent]);
 
   const toggleCalendar = useCallback((calendarId: string) => {
     setCalendarVisibility(prev => {
       const updated = { ...prev, [calendarId]: !prev[calendarId] };
-      // Save to localStorage
       const calendars = DEFAULT_CALENDARS.map(cal => ({
         ...cal,
         visible: updated[cal.id] ?? cal.visible,
@@ -172,17 +63,38 @@ export function useCalendarEvents(userId?: string | null) {
   }, [events, calendarVisibility]);
 
   return {
+    calendarVisibility,
+    toggleCalendar,
+    filteredEvents,
+  };
+}
+
+export function useCalendarEvents() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const { calendarVisibility, toggleCalendar, filteredEvents } = useCalendarEventsBase(events);
+
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // TODO: Replace with useEventRepository hook
+      setEvents([]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load events");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
     events,
-    decryptedEvents,
-    isDecrypting,
+    filteredEvents,
+    isLoading,
     error,
-    createEvent,
-    updateEvent,
-    deleteEvent,
     toggleCalendar,
     calendarVisibility,
-    filteredEvents,
-    refresh: () => {},
-    isLoaded: !isDecrypting && !!encryptedEvents,
+    refresh,
+    isLoaded: !isLoading,
   };
 }

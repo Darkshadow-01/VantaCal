@@ -6,6 +6,8 @@ export const createEvent = mutation({
     userId: v.string(),
     calendarId: v.optional(v.id("shared_calendars")),
     encryptedPayload: v.string(),
+    syncStatus: v.optional(v.union(v.literal("saving"), v.literal("saved"), v.literal("failed"))),
+    isEncrypted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -13,9 +15,14 @@ export const createEvent = mutation({
       userId: args.userId,
       calendarId: args.calendarId,
       encryptedPayload: args.encryptedPayload,
+      syncStatus: args.syncStatus || "saving",
+      lastSyncedAt: now,
+      isEncrypted: args.isEncrypted || false,
       createdAt: now,
       updatedAt: now,
     });
+    // Update sync status to saved
+    await ctx.db.patch(eventId, { syncStatus: "saved" as "saving" | "saved" | "failed" });
     return eventId;
   },
 });
@@ -24,13 +31,20 @@ export const updateEvent = mutation({
   args: {
     eventId: v.id("events"),
     encryptedPayload: v.optional(v.string()),
+    syncStatus: v.optional(v.union(v.literal("saving"), v.literal("saved"), v.literal("failed"))),
   },
   handler: async (ctx, args) => {
-    const updates: Record<string, unknown> = { updatedAt: Date.now() };
+    const updates: Record<string, unknown> = { 
+      updatedAt: Date.now(),
+      syncStatus: args.syncStatus || "saving",
+      lastSyncedAt: Date.now(),
+    };
     if (args.encryptedPayload) {
       updates.encryptedPayload = args.encryptedPayload;
     }
     await ctx.db.patch(args.eventId, updates);
+    // Update sync status to saved after successful update
+    await ctx.db.patch(args.eventId, { syncStatus: "saved" as "saving" | "saved" | "failed" });
     return args.eventId;
   },
 });
@@ -204,5 +218,57 @@ export const checkAndLogConflict = mutation({
       hasConflict: conflicts.length > 0,
       conflicts,
     };
+  },
+});
+
+export const migrateEventEncryption = mutation({
+  args: {
+    eventId: v.id("events"),
+    encryptedPayload: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.eventId, {
+      encryptedPayload: args.encryptedPayload,
+      isEncrypted: true,
+      updatedAt: Date.now(),
+    });
+    return { success: true };
+  },
+});
+
+export const getUnencryptedEvents = query({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    return events.filter((e) => !e.isEncrypted);
+  },
+});
+
+export const markEventSyncFailed = mutation({
+  args: {
+    eventId: v.id("events"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.eventId, {
+      syncStatus: "failed" as "saving" | "saved" | "failed",
+    });
+    return { success: true };
+  },
+});
+
+export const retryEventSync = mutation({
+  args: {
+    eventId: v.id("events"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.eventId, {
+      syncStatus: "saving" as "saving" | "saved" | "failed",
+    });
+    return { success: true };
   },
 });

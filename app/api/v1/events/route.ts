@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ApiErrorBuilder, createPaginationMeta, checkRateLimit, getRateLimitKey, getClientIp, DEFAULT_RATE_LIMIT } from "@/src/api";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/src/api/pagination";
+import { EventCreateSchema, EventQuerySchema, EventUpdateSchema, validateRequest } from "@/src/api/schemas";
 
 export async function GET(request: NextRequest) {
   try {
@@ -124,46 +125,35 @@ export async function POST(request: NextRequest) {
     const { offlineStorage } = await import("@/lib/offline-storage");
     const body = await request.json();
 
-    if (!body.title) {
+    const validation = validateRequest(EventCreateSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: ApiErrorBuilder.validationError("Event title is required", { field: "title" }) },
-        { status: 422 }
-      );
-    }
-
-    if (!body.startTime) {
-      return NextResponse.json(
-        { error: ApiErrorBuilder.validationError("Start time is required", { field: "startTime" }) },
-        { status: 422 }
-      );
-    }
-    
-    if (body.endTime && body.endTime <= body.startTime) {
-      return NextResponse.json(
-        { error: ApiErrorBuilder.validationError("End time must be after start time", { field: "endTime" }) },
+        { 
+          error: ApiErrorBuilder.validationError(
+            "Invalid event data",
+            { errors: validation.errors.flatten().fieldErrors }
+          ) 
+        },
         { status: 422 }
       );
     }
 
     const event = {
-      id: body.id || `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: body.title || "Untitled",
-      startTime: body.startTime || Date.now(),
-      endTime: body.endTime || (body.startTime ? body.startTime + 3600000 : Date.now() + 3600000),
-      allDay: body.allDay || false,
-      calendarId: body.calendarId || "personal",
-      color: body.color || "#5B8DEF",
-      type: body.type || "event",
-      system: body.system,
-      completed: body.completed || false,
-      guests: body.guests || [],
-      location: body.location || "",
-      description: body.description || "",
-      notification: body.notification,
-      reminder: body.reminder,
-      recurrence: body.recurrence,
-      recurringEventId: body.recurringEventId,
-      isRecurringInstance: body.isRecurringInstance,
+      id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: validation.data.title,
+      description: validation.data.description,
+      startTime: validation.data.startTime,
+      endTime: validation.data.endTime,
+      allDay: validation.data.allDay,
+      calendarId: validation.data.calendarId,
+      color: validation.data.color || "#5B8DEF",
+      type: validation.data.type,
+      system: validation.data.system,
+      location: validation.data.location,
+      guests: validation.data.guests,
+      reminder: validation.data.reminder,
+      notification: validation.data.notification,
+      recurrence: validation.data.recurrence,
       version: 1,
       updatedAt: Date.now(),
       synced: true,
@@ -285,6 +275,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const validation = validateRequest(EventUpdateSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { 
+          error: ApiErrorBuilder.validationError(
+            "Invalid event data",
+            { errors: validation.errors.flatten().fieldErrors }
+          ) 
+        },
+        { status: 422 }
+      );
+    }
+
     const events = await offlineStorage.getAllEvents();
     const existingEvent = events.find(e => e.id === eventId);
 
@@ -295,16 +298,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (body.endTime && body.startTime && body.endTime <= body.startTime) {
-      return NextResponse.json(
-        { error: ApiErrorBuilder.validationError("End time must be after start time", { field: "endTime" }) },
-        { status: 422 }
-      );
-    }
-
     const updatedEvent = {
       ...existingEvent,
-      ...body,
+      ...validation.data,
       id: eventId,
       updatedAt: Date.now(),
     };

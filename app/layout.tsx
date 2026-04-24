@@ -3,6 +3,7 @@ import { Instrument_Serif, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
 import ClientToastProvider from "./ClientToastProvider";
+import Analytics from "@/src/lib/analytics";
 
 const instrumentSerif = Instrument_Serif({
   variable: "--font-serif",
@@ -51,6 +52,7 @@ export default function RootLayout({
         <ConvexClientProvider>
           <ClientToastProvider>
             <main className="flex-1 overflow-hidden">{children}</main>
+            <Analytics />
           </ClientToastProvider>
         </ConvexClientProvider>
       </body>

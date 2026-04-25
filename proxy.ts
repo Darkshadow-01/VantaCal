@@ -4,9 +4,7 @@ const isProtectedRoute = createRouteMatcher([
   "/calendar(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  return true;
-});
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
